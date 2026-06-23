@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Dashboard IDC 2026 · Índice Departamental de Competitividad</title>
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#f4f7fb; --card:#ffffff; --ink:#16202e; --muted:#5f6b7a; --line:#e3e9f0;
+    --accent:#1f6feb; --accent2:#0e7c66; --shadow:0 1px 3px rgba(16,32,55,.08),0 4px 16px rgba(16,32,55,.06);
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+       background:var(--bg);color:var(--ink);line-height:1.45}
+  a{color:var(--accent)}
+  .wrap{max-width:1240px;margin:0 auto;padding:20px 16px 60px}
+  header.top{display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px;justify-content:space-between;margin-bottom:18px}
+  h1{font-size:26px;margin:0 0 4px}
+  .sub{color:var(--muted);font-size:14px}
+  .badge{display:inline-block;background:#e8f0fe;color:var(--accent);font-weight:600;
+         font-size:12px;padding:3px 10px;border-radius:999px;margin-bottom:8px}
+  /* KPIs */
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin:8px 0 22px}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow)}
+  .kpi .lab{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+  .kpi .val{font-size:22px;font-weight:700;margin-top:4px}
+  .kpi .det{font-size:12.5px;color:var(--muted);margin-top:2px}
+  /* tabs */
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+  .tab{background:var(--card);border:1px solid var(--line);padding:9px 16px;border-radius:999px;
+       cursor:pointer;font-weight:600;font-size:14px;color:var(--muted)}
+  .tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .panel{display:none}
+  .panel.active{display:block}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
+  .controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+  input[type=search],select{font:inherit;padding:8px 11px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink)}
+  input[type=search]{min-width:220px}
+  label.ctl{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px}
+  /* table */
+  .tablewrap{overflow:auto;border-radius:10px;border:1px solid var(--line)}
+  table{border-collapse:collapse;width:100%;font-size:13px;min-width:1050px}
+  th,td{padding:7px 9px;text-align:center;white-space:nowrap;border-bottom:1px solid var(--line)}
+  th{position:sticky;top:0;background:#f0f4f9;cursor:pointer;font-size:11.5px;user-select:none;z-index:2}
+  th.sortable:hover{background:#e6edf6}
+  td.dept{text-align:left;font-weight:600;position:sticky;left:0;background:#fff;z-index:1}
+  th.depth{text-align:left;left:0;z-index:3}
+  tr.sel td{background:#fff7e6 !important}
+  tr.sel td.dept{background:#fff2d6 !important}
+  tbody tr{cursor:pointer}
+  .chip{font-weight:700;border-radius:6px;padding:2px 7px;color:#10261d;display:inline-block;min-width:42px}
+  .delta.up{color:#0e7c66;font-weight:700}.delta.down{color:#c0392b;font-weight:700}.delta.eq{color:var(--muted)}
+  .regfilter span{font-size:12px}
+  /* map */
+  .maplayout{display:grid;grid-template-columns:1.4fr 1fr;gap:18px}
+  @media(max-width:860px){.maplayout{grid-template-columns:1fr}.tabs{overflow:auto}}
+  #map svg{width:100%;height:auto;display:block}
+  .geopath{stroke:#ffffff;stroke-width:.6;cursor:pointer;transition:opacity .15s}
+  .geopath:hover{opacity:.78}
+  .geopath.sel{stroke:#16202e;stroke-width:1.8}
+  .legend{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);margin-top:8px;flex-wrap:wrap}
+  .legend .bar{height:12px;width:200px;border-radius:6px}
+  .tip{position:fixed;pointer-events:none;background:#16202e;color:#fff;padding:7px 10px;border-radius:8px;
+       font-size:12.5px;opacity:0;transition:opacity .1s;z-index:50;box-shadow:var(--shadow)}
+  .tilemap{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px}
+  .tile{border-radius:8px;padding:8px;color:#10261d;font-size:12px;cursor:pointer;border:1px solid rgba(0,0,0,.06)}
+  .tile b{display:block;font-size:11px;line-height:1.2}
+  .tile .ts{font-weight:800;font-size:15px}
+  .siderank{max-height:520px;overflow:auto}
+  .rrow{display:flex;align-items:center;gap:8px;padding:5px 4px;border-bottom:1px solid var(--line);cursor:pointer;font-size:13px}
+  .rrow:hover{background:#f5f8fc}.rrow.sel{background:#fff7e6}
+  .rrow .pos{width:24px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .rrow .nm{flex:1}.rrow .sc{font-weight:700;font-variant-numeric:tabular-nums}
+  .rbar{height:7px;border-radius:4px;margin-top:3px}
+  /* compare */
+  .cmpgrid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:860px){.cmpgrid{grid-template-columns:1fr}}
+  .pick{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+  .pick label{font-size:12.5px;background:#eef3f9;border:1px solid var(--line);padding:5px 9px;border-radius:8px;cursor:pointer}
+  .pick input{margin-right:5px;vertical-align:-1px}
+  .chartbox{position:relative;height:380px}
+  h3.sec{margin:2px 0 10px;font-size:16px}
+  .note{font-size:12.5px;color:var(--muted)}
+  footer{margin-top:30px;font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="badge">IDC 2026 · comparativa 2025</div>
+      <h1>Índice Departamental de Competitividad</h1>
+      <div class="sub">32 departamentos + Bogotá D.C. · 13 pilares · puntajes 0–10. Fuente: Consejo Privado de Competitividad &amp; Universidad del Rosario.</div>
+    </div>
+  </header>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="ranking">📊 Ranking &amp; tabla</div>
+    <div class="tab" data-tab="mapa">🗺️ Mapa</div>
+    <div class="tab" data-tab="comparar">📈 Comparar &amp; pilares</div>
+  </div>
+
+  <!-- RANKING -->
+  <section class="panel active" data-panel="ranking">
+    <div class="card">
+      <div class="controls">
+        <input type="search" id="q" placeholder="Buscar departamento…" />
+        <label class="ctl">Región
+          <select id="regsel"></select>
+        </label>
+        <span class="note" id="tcount"></span>
+      </div>
+      <div class="tablewrap"><table id="tbl"><thead></thead><tbody></tbody></table></div>
+      <div class="note" style="margin-top:8px">Clic en una fila para seleccionar el departamento. Clic en encabezado para ordenar. Los colores van de rojo (bajo) a verde (alto).</div>
+    </div>
+  </section>
+
+  <!-- MAPA -->
+  <section class="panel" data-panel="mapa">
+    <div class="card">
+      <div class="controls">
+        <label class="ctl">Colorear por
+          <select id="mapmetric"></select>
+        </label>
+        <span class="note" id="mapstatus"></span>
+      </div>
+      <div class="maplayout">
+        <div>
+          <div id="map"></div>
+          <div class="legend"><span id="legmin"></span><div class="bar" id="legbar"></div><span id="legmax"></span><span style="margin-left:10px" id="legtitle"></span></div>
+        </div>
+        <div>
+          <h3 class="sec" id="ranktitle">Ranking</h3>
+          <div class="siderank" id="siderank"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMPARAR -->
+  <section class="panel" data-panel="comparar">
+    <div class="card">
+      <h3 class="sec">Selecciona hasta 3 departamentos (radar de los 13 pilares)</h3>
+      <div class="pick" id="pick"></div>
+      <div class="cmpgrid">
+        <div>
+          <div class="chartbox"><canvas id="radar"></canvas></div>
+        </div>
+        <div>
+          <h3 class="sec" id="evotitle">Evolución 2025 → 2026</h3>
+          <div class="chartbox"><canvas id="evo"></canvas></div>
+          <div class="note">Barras: puntaje 2025 vs 2026 del departamento principal (el primero seleccionado).</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Datos: archivos de cálculo del IDC (CPC + Universidad del Rosario). Puntajes 0–10; el IDC general es el promedio de los 13 pilares.
+    Más información: <a href="https://compite.com.co/indice-departamental-de-competitividad-idc/" target="_blank" rel="noopener">compite.com.co</a>.
+    Tablero generado para visualización; verifica cifras contra el informe oficial antes de publicar.
+  </footer>
+</div>
+<div class="tip" id="tip"></div>
+
+<script>
+const DATA = {"meta": {"fuente": "CPC + Universidad del Rosario — IDC (archivos de cálculo internos)", "ediciones": ["2025", "2026"], "n_departamentos": 33, "pilares": [{"key": "instituciones", "nombre": "Instituciones"}, {"key": "infraestructura", "nombre": "Infraestructura y equipamiento"}, {"key": "tic", "nombre": "Adopción TIC"}, {"key": "sostenibilidad", "nombre": "Sostenibilidad ambiental"}, {"key": "salud", "nombre": "Salud"}, {"key": "edu_basica", "nombre": "Educación básica y media"}, {"key": "edu_superior", "nombre": "Educación superior y formación para el trabajo"}, {"key": "entorno_negocios", "nombre": "Entorno para los negocios"}, {"key": "mercado_laboral", "nombre": "Mercado laboral"}, {"key": "sistema_financiero", "nombre": "Sistema financiero"}, {"key": "tamano_mercado", "nombre": "Tamaño del mercado"}, {"key": "sofisticacion", "nombre": "Sofisticación y diversificación"}, {"key": "innovacion", "nombre": "Innovación"}]}, "departamentos": [{"departamento": "Bogotá, D.C.", "region": "Centro Oriente", "idc_2025": 8.0392, "idc_2026": 7.956, "rank_2025": 1, "rank_2026": 1, "cambio_pos": 0, "pilares": {"instituciones": {"nombre": "Instituciones", "p2025": 8.3708, "p2026": 8.2371, "r2025": 1, "r2026": 1}, "infraestructura": {"nombre": "Infraestructura y equipamiento", "p2025": 8.1948, "p2026": 7.972, "r2025": 1, "r2026": 1}, "tic": {"nombre": "Adopción TIC", "p2025": 8.9533, "p2026": 8.8304, "r2025": 1, "r2026": 1}, "sostenibilidad": {"nombre": "Sostenibilidad ambiental", "p2025": 5.2481, "p2026": 5.391, "r2025": 11, "r2026": 11}, "salud": {"nombre": "Salud", "p2025": 8.2506, "p2026": 8.3095, "r2025": 1, "r2026": 1}, "edu_basica": {"nombre": "Educación básica y media", "p2025": 8.1178, "p2026": 8.2709, "r2025": 4, "r2026": 4}, "edu_superior": {"nombre": "Educación superior y formación para el trabajo", "p2025": 7.568, "p2026": 6.9163, "r2025": 1, "r2026": 1}, "entorno_negocios": {"nombre": "Entorno para los negocios", "p2025": 9.3238, "p2026": 9.7617, "r2025": 1, "r2026": 1}, "mercado_laboral": {"nombre": "Mercado laboral", "p2025": 8.0846, "p2026": 8.3176, "r2025": 2, "r2026": 2}, "sistema_financiero": {"nombre": "Sistema financiero", "p2025": 8.7773, "p2026": 8.9331, "r2025": 1, "r2026": 1}, "tamano_mercado": {"nombre": "Tamaño del mercado", "p2025": 8.5704, "p2026": 8.4452, "r2025": 1, "r2026": 1}, "sofisticacion": {"nombre": "Sofisticación y diversificación", "p2025": 9.2132, "p2026": 8.9587, "r2025": 4, "r2026": 6}, "innovacion": {"nombre": "Innovación", "p2025": 5.8365, "p2026": 5.0848, "r2025": 1, "r2026": 2}}}, {"departamento": "Antioquia", "region": "Eje Cafetero", "idc_2025": 6.8036, "idc_2026": 6.9052, "rank_2025": 2, "rank_2026": 2, "cambio_pos": 0, "pilares": {"instituciones": {"nombre": "Instituciones", "p2025": 6.644, "p2026": 6.9009, "r2025": 5, "r2026": 4}, "infraestructura": {"nombre": "Infraestructura y equipamiento", "p2025": 5.2929, "p2026": 5.1769, "r2025": 13, "r2026": 12}, "tic": {"nombre": "Adopción TIC", "p2025": 7.0861, "p2026": 7.3064, "r2025": 2, "r2026": 4}, "sostenibilidad": {"nombre": "Sostenibilidad ambiental", "p2025": 5.651, "p2026": 5.9536, "r2025": 7, "r2026": 7}, "salud": {"nombre": "Salud", "p2025": 8.0593, "p2026": 7.8781, "r2025": 3, "r2026": 3}, "edu_basica": {"nombre": "Educación básica y media", "p2025": 7.0109, "p2026": 7.1785, "r2025": 13, "r2026": 13}, "edu_superior": {"nombre": "Educación superior y formación para el trabajo", "p2025": 5.8846, "p2026": 6.045, "r2025": 3, "r2026": 3}, "entorno_negocios": {"nombre": "Entorno para los negocios", "p2025": 7.1164, "p2026": 7.5349, "r2025": 3, "r2026": 3}, "mercado_laboral": {"nombre": "Mercado laboral", "p2025": 7.6101, "p2026": 7.7769, "r2025": 4, "r2026": 4}, "sistema_financiero": {"nombre": "Sistema financiero", "p2025": 6.8221, "p2026": 7.0377, "r2025": 2, "r2026": 2}, "tamano_mercado": {"nombre": "Tamaño del mercado", "p2025": 7.8786, "p2026": 7.808, "r2025": 2, "r2026": 2}, "sofisticacion": {"nombre": "Sofisticación y diversificación", "p2025": 8.6588, "p2026": 8.7731, "r2025": 9, "r2026": 8}, "innovacion": {"nombre": "Innovación", "p2025": 4.7319, "p2026": 4.3971, "r2025": 3, "r2026": 3}}}, {"departamento": "Valle del Cauca", "region": "Pacífico", "idc_2025": 6.2908, "idc_2026": 6.4272, "rank_2025": 3, "rank_2026": 3, "cambio_pos": 0, "pilares": {"instituciones": {"nombre": "Instituciones", "p2025": 7.0066, "p2026": 7.3424, "r2025": 3, "r2026": 2}, "infraestructura": {"nombre": "Infraestructura y equipamiento", "p2025": 5.3612, "p2026": 5.3016, "r2025": 9, "r2026": 9}, "tic": {"nombre": "Adopción TIC", "p2025": 5.9039, "p2026": 6.1675, "r2025": 8, "r2026": 9}, "sostenibilidad": {"nombre": "Sostenibilidad ambiental", "p2025": 4.9407, "p2026": 5.0941, "r2025": 16, "r2026": 15}, "salud": {"nombre": "Salud", "p2025": 7.9038, "p2026": 7.8771, "r2025": 4, "r2026": 4}, "edu_basica": {"nombre": "Educación básica y media", "p2025": 6.2324, "p2026": 6.5087, "r2025": 21, "r2026": 21}, "edu_superior": {"nombre": "Educación superior y formación para el trabajo", "p2025": 5.3134, "p2026": 5.3754, "r2025": 8, "r2026": 8}, "entorno_negocios": {"nombre": "Entorno para los negocios", "p2025": 7.1561, "p2026": 6.959, "r2025": 2, "r2026": 5}, "mercado_laboral": {"nombre": "Mercado laboral", "p2025": 6.789, "p2026": 7.1823, "r2025": 12, "r2026": 9}, "sistema_financiero": {"nombre": "Sistema financiero", "p2025": 4.5829, "p2026": 4.9213, "r2025": 7, "r2026": 6}, "tamano_mercado": {"nombre": "Tamaño del mercado", "p2025": 7.2341, "p2026": 7.2112, "r2025": 5, "r2026": 4}, "sofisticacion": {"nombre": "Sofisticación y diversificación", "p2025": 9.6909, "p2026": 9.6106, "r2025": 1, "r2026": 1}, "innovacion": {"nombre": "Innovación", "p2025": 3.6655, "p2026": 4.0028, "r2025": 7, "r2026": 5}}}, {"departamento": "Risaralda", "region": "Eje Cafetero", "idc_2025": 6.2028, "idc_2026": 6.3552, "rank_2025": 5, "rank_2026": 4, "cambio_pos": 1, "pilares": {"instituciones": {"nombre": "Instituciones", "p2025": 6.5713, "p2026": 6.8644, "r2025": 6, "r2026": 5}, "infraestructura": {"nombre": "Infraestructura y equipamiento", "p2025": 4.6205, "p2026": 4.4118, "r2025": 22, "r2026": 24}, "tic": {"nombre": "Adopción TIC", "p2025": 6.9468, "p2026": 7.803, "r2025": 3, "r2026": 2}, "sostenibilidad": {"nombre": "Sostenibilidad ambiental", "p2025": 4.25, "p2026": 4.4714, "r2025": 29, "r2026": 25}, "salud": {"nombre": "Salud", "p2025": 7.7177, "p2026": 7.5123, "r2025": 7, "r2026": 8}, "edu_basica": {"nombre": "Educación básica y media", "p2025": 7.3658, "p2026": 7.3713, "r2025": 11, "r2026": 12}, "edu_superior": {"nombre": "Educación superior y formación para el trabajo", "p2025": 5.1831, "p2026": 5.5195, "r2025": 9, "r2026": 5}, "entorno_negocios": {"nombre": "Entorno para los negocios", "p2025": 6.2625, "p2026": 6.7624, "r2025": 7, "r2026": 6}, "mercado_laboral": {"nombre": "Mercado laboral", "p2025": 7.4696, "p2026": 7.5926, "r2025": 6, "r2026": 5}, "sistema_financiero": {"nombre": "Sistema financiero", "p2025": 4.8864, "p2026": 5.1829, "r2025": 6, "r2026": 4}, "tamano_mercado": {"nombre": "Tamaño del mercado", "p2025": 6.0039, "p2026": 6.0604, "r2025": 10, "r2026": 10}, "sofisticacion": {"nombre": "Sofisticación y diversificación", "p2025": 8.9315, "p2026": 8.9697, "r2025": 5, "r2026": 5}, "innovacion": {"nombre": "Innovación", "p2025": 4.4276, "p2026": 4.0957, "r2025": 4, "r2026": 4}}}, {"departamento": "Santander", "region": "Centro Oriente", "idc_2025": 6.2798, "idc_2026": 6.3202, "rank_2025": 4, "rank_2026": 5, "cambio_pos": -1, "pilares": {"instituciones": {"nombre": "Instituciones", "p2025": 5.5654, "p2026": 5.8042, "r2025": 14, "r2026": 14}, "infraestructura": {"nombre": "Infraestructura y equipamiento", "p2025": 5.3494, "p2026": 4.9673, "r2025": 11, "r2026": 15}, "tic": {"nombre": "Adopción TIC", "p2025": 6.1109, "p2026": 6.318, "r2025": 6, "r2026": 7}, "sostenibilidad": {"nombre": "Sostenibilidad ambiental", "p2025": 5.9656, "p2026": 6.0857, "r2025": 4, "r2026": 6}, "salud": {"nombre": "Salud", "p2025": 7.8773, "p2026": 7.8686, "r2025": 5, "r2026": 5}, "edu_basica": {"nombre": "Educación básica y media", "p2025": 8.3597, "p2026": 8.4989, "r2025": 2, "r2026": 2}, "edu_superior": {"nombre": "Educación superior y formación para el trabajo", "p2025": 6.0718, "p2026": 6.1483, "r2025": 2, "r2026": 2}, "entorno_negocios": {"nombre": "Entorno para los negocios", "p2025": 6.1646, "p2026": 6.0877, "r2025": 8, "r2026": 11}, "mercado_laboral": {"nombre": "Mercado laboral", "p2025": 6.8486, "p2026": 6.9915, "r2025": 10, "r2026": 11}, "sistema_financiero": {"nombre": "Sistema financiero", "p2025": 4.1803, "p2026": 4.4323, "r2025": 9, "r2026": 9}, "tamano_mercado": {"nombre": "Tamaño del mercado", "p2025": 6.4438, "p2026": 6.4123, "r2025": 9, "r2026": 9}, "sofisticacion": {"nombre": "Sofisticación y diversificación", "p2025": 8.5777, "p2026": 9.0392, "r2025": 10, "r2026": 4}, "innovacion": {"nombre": "Innovación", "p2025": 4.1225, "p2026": 3.5091, "r2025": 5, "r2026": 7}}}, {"departamento": "Atlántico", "region": "Caribe", "idc_2025": 6.0945, "idc_2026": 6.2231, "rank_2025": 7, "rank_2026": 6, "cambio_pos": 1, "pilares": {"instituciones": {"nombre": "Instituciones", "p2025": 5.9916, "p2026": 6.2683, "r2025": 9, "r2026": 7}, "infraestructura": {"nombre": "Infraestructura y equipamiento", "p2025": 5.7943, "p2026": 5.9597, "r2025": 4, "r2026": 3}, "tic": {"nombre": "Adopción TIC", "p2025": 6.0124, "p2026": 6.2597, "r2025": 7, "r2026": 8}, "sostenibilidad": {"nombre": "Sostenibilidad ambiental", "p2025": 3.5523, "p2026": 2.6998, "r2025": 33, "r2026": 33}, "salud": {"nombre": "Salud", "p2025": 7.7428, "p2026": 7.727, "r2025": 6, "r2026": 6}, "edu_basica": {"nombre": "Educación básica y media", "p2025": 7.4686, "p2026": 7.4073, "r2025": 10, "r2026": 11}, "edu_superior": {"nombre": "Educación superior y formación para el trabajo", "p2025": 5.4768, "p2026": 5.7292, "r2025": 7, "r2026": 4}, "entorno_negocios": {"nombre": "Entorno para los negocios", "p2025": 6.5755, "p2026": 7.9931, "r2025": 5, "r2026": 2}, "mercado_laboral": {"nombre": "Mercado laboral", "p2025": 6.0901, "p2026": 6.4521, "r2025": 16, "r2026": 16}, "sistema_financiero": {"nombre": "Sistema financiero", "p2025": 5.0755, "p2026": 5.3059, "r2025": 4, "r2026": 3}, "tamano_mercado": {"nombre": "Tamaño del mercado", "p2025": 7.0391, "p2026": 6.9336, "r2025": 6, "r2026": 6}, "sofisticacion": {"nombre": "Sofisticación y diversificación", "p2025": 8.8932, "p2026": 8.8124, "r2025": 6, "r2026": 7}, "innovacion": {"nombre": "Innovación", "p2025": 3.5165, "p2026": 3.3528, "r2025": 8, "r2026": 8}}}, {"departamento": "Cundinamarca", "region": "Centro Oriente", "idc_2025": 6.1255, "idc_2026": 6.1174, "rank_2025": 6, "rank_2026": 7, "cambio_pos": -1, "pilares": {"instituciones": {"nombre": "Instituciones", "p2025": 7.2215, "p2026": 7.2423, "r2025": 2, "r2026": 3}, "infraestructura": {"nombre": "Infraestructura y equipamiento", "p2025": 5.7149, "p2026": 5.1556, "r2025": 5, "r2026": 13}, "tic": {"nombre": "Adopción TIC", "p2025": 4.9768, "p2026": 5.4442, "r2025": 12, "r2026": 12}, "sostenibilidad": {"nombre": "Sostenibilidad ambiental", "p2025": 6.0389, "p2026": 5.8145, "r2025": 3, "r2026": 8}, "salud": {"nombre": "Salud", "p2025": 6.4667, "p2026": 6.3392, "r2025": 22, "r2026": 23}, "edu_basica": {"nombre": "Educación básica y media", "p2025": 7.7302, "p2026": 7.7619, "r2025": 6, "r2026": 7}, "edu_superior": {"nombre": "Educación superior y formación para el trabajo", "p2025": 4.729, "p2026": 5.1638, "r2025": 10, "r2026": 10}, "entorno_negocios": {"nombre": "Entorno para los negocios", "p2025": 6.5403, "p2026": 6.279, "r2025": 6, "r2026": 9}, "mercado_laboral": {"nombre": "Mercado laboral", "p2025": 7.7662, "p2026": 7.7856, "r2025": 3, "r2026": 3}, "sistema_financiero": {"nombre": "Sistema financiero", "p2025": 2.8963, "p2026": 3.0863, "r2025": 21, "r2026": 21}, "tamano_mercado": {"nombre": "Tamaño del mercado", "p2025": 7.3321, "p2026": 7.2554, "r2025": 4, "r2026": 3}, "sofisticacion": {"nombre": "Sofisticación y diversificación", "p2025": 9.3515, "p2026": 9.1532, "r2025": 2, "r2026": 3}, "innovacion": {"nombre": "Innovación", "p2025": 2.8666, "p2026": 3.0448, "r2025": 12, "r2026": 10}}}, {"departamento": "Caldas", "region": "Eje Cafetero", "idc_2025": 6.0384, "idc_2026": 6.0213, "rank_2025": 8, "rank_2026": 8, "cambio_pos": 0, "pilares": {"instituciones": {"nombre": "Instituciones", "p2025": 6.0712, "p2026": 6.2628, "r2025": 8, "r2026": 8}, "infraestructura": {"nombre": "Infraestructura y equipamiento", "p2025": 5.5671, "p2026": 5.4259, "r2025": 8, "r2026": 5}, "tic": {"nombre": "Adopción TIC", "p2025": 6.8573, "p2026": 7.5125, "r2025": 4, "r2026": 3}, "sostenibilidad": {"nombre": "Sostenibilidad ambiental", "p2025": 4.4166, "p2026": 4.5245, "r2025": 27, "r2026": 23}, "salud": {"nombre": "Salud", "p2025": 7.4557, "p2026": 7.4682, "r2025": 8, "r2026": 9}, "edu_basica": {"nombre": "Educación básica y media", "p2025": 6.8289, "p2026": 6.8968, "r2025": 16, "r2026": 14}, "edu_superior": {"nombre": "Educación superior y formación para el trabajo", "p2025": 5.7029, "p2026": 5.213, "r2025": 4, "r2026": 9}, "entorno_negocios": {"nombre": "Entorno para los negocios", "p2025": 5.364, "p2026": 5.6957, "r2025": 15, "r2026": 13}, "mercado_laboral": {"nombre": "Mercado laboral", "p2025": 7.5417, "p2026": 7.5559, "r2025": 5, "r2026": 6}, "sistema_financiero": {"nombre": "Sistema financiero", "p2025": 4.0624, "p2026": 4.2091, "r2025": 11, "r2026": 14}, "tamano_mercado": {"nombre": "Tamaño del mercado", "p2025": 5.9536, "p2026": 5.9732, "r2025": 11, "r2026": 12}, "sofisticacion": {"nombre": "Sofisticación y diversificación", "p2025": 8.697, "p2026": 7.9028, "r2025": 8, "r2026": 12}, "innovacion": {"nombre": "Innovación", "p2025": 3.9813, "p2026": 3.6361, "r2025": 6, "r2026": 6}}}, {"departamento": "Quindío", "region": "Eje Cafetero", "idc_2025": 5.855, "idc_2026": 5.9926, "rank_2025": 9, "rank_2026": 9, "cambio_pos": 0, "pilares": {"instituciones": {"nombre": "Instituciones", "p2025": 6.8187, "p2026": 6.5288, "r2025": 4, "r2026": 6}, "infraestructura": {"nombre": "Infraestructura y equipamiento", "p2025": 5.5989, "p2026": 5.3991, "r2025": 7, "r2026": 6}, "tic": {"nombre": "Adopción TIC", "p2025": 5.695, "p2026": 6.4856, "r2025": 9, "r2026": 5}, "sostenibilidad": {"nombre": "Sostenibilidad ambiental", "p2025": 4.0064, "p2026": 4.2689, "r2025": 30, "r2026": 28}, "salud": {"nombre": "Salud", "p2025": 7.4332, "p2026": 7.6855, "r2025": 9, "r2026": 7}, "edu_basica": {"nombre": "Educación básica y media", "p2025": 8.2818, "p2026": 8.434, "r2025": 3, "r2026": 3}, "edu_superior": {"nombre": "Educación superior y formación para el trabajo", "p2025": 5.5094, "p2026": 5.4864, "r2025": 5, "r2026": 6}, "entorno_negocios": {"nombre": "Entorno para los negocios", "p2025": 5.7552, "p2026": 6.1747, "r2025": 11, "r2026": 10}, "mercado_laboral": {"nombre": "Mercado laboral", "p2025": 6.8503, "p2026": 6.7859, "r2025": 9, "r2026": 13}, "sistema_financiero": {"nombre": "Sistema financiero", "p2025": 4.3642, "p2026": 4.5914, "r2025": 8, "r2026": 8}, "tamano_mercado": {"nombre": "Tamaño del mercado", "p2025": 5.183, "p2026": 5.1951, "r2025": 23, "r2026": 23}, "sofisticacion": {"nombre": "Sofisticación y diversificación", "p2025": 5.5513, "p2026": 5.7171, "r2025": 21, "r2026": 17}, "innovacion": {"nombre": "Innovación", "p2025": 5.0678, "p2026": 5.1512, "r2025": 2, "r2026": 1}}}, {"departamento": "Boyacá", "region": "Centro Oriente", "idc_2025": 5.7596, "idc_2026": 5.7904, "rank_2025": 10, "rank_2026": 10, "cambio_pos": 0, "pilares": {"instituciones": {"nombre": "Instituciones", "p2025": 5.537, "p2026": 5.7554, "r2025": 18, "r2026": 15}, "infraestructura": {"nombre": "Infraestructura y equipamiento", "p2025": 6.9614, "p2026": 6.6608, "r2025": 2, "r2026": 2}, "tic": {"nombre": "Adopción TIC", "p2025": 6.3181, "p2026": 6.4373, "r2025": 5, "r2026": 6}, "sostenibilidad": {"nombre": "Sostenibilidad ambiental", "p2025": 5.5819, "p2026": 5.6052, "r2025": 8, "r2026": 9}, "salud": {"nombre": "Salud", "p2025": 7.0901, "p2026": 7.3513, "r2025": 12, "r2026": 10}, "edu_basica": {"nombre": "Educación básica y media", "p2025": 8.7748, "p2026": 8.7287, "r2025": 1, "r2026": 1}, "edu_superior": {"nombre": "Educación superior y formación para el trabajo", "p2025": 5.4901, "p2026": 5.4115, "r2025": 6, "r2026": 7}, "entorno_negocios": {"nombre": "Entorno para los negocios", "p2025": 4.809, "p2026": 4.6012, "r2025": 19, "r2026": 24}, "mercado_laboral": {"nombre": "Mercado laboral", "p2025": 6.0965, "p2026": 6.2279, "r2025": 15, "r2026": 18}, "sistema_financiero": {"nombre": "Sistema financiero", "p2025": 3.6766, "p2026": 3.9964, "r2025": 17, "r2026": 16}, "tamano_mercado": {"nombre": "Tamaño del mercado", "p2025": 5.7822, "p2026": 5.7906, "r2025": 14, "r2026": 14}, "sofisticacion": {"nombre": "Sofisticación y diversificación", "p2025": 5.6603, "p2026": 5.5867, "r2025": 20, "r2026": 18}, "innovacion": {"nombre": "Innovación", "p2025": 3.0964, "p2026": 3.122, "r2025": 11, "r2026": 9}}}, {"departamento": "Bolívar", "region": "Caribe", "idc_2025": 5.4524, "idc_2026": 5.6054, "rank_2025": 12, "rank_2026": 11, "cambio_pos": 1, "pilares": {"instituciones": {"nombre": "Instituciones", "p2025": 5.243, "p2026": 5.986, "r2025": 22, "r2026": 11}, "infraestructura": {"nombre": "Infraestructura y equipamiento", "p2025": 5.0616, "p2026": 5.1389, "r2025": 15, "r2026": 14}, "tic": {"nombre": "Adopción TIC", "p2025": 4.4518, "p2026": 4.605, "r2025": 15, "r2026": 14}, "sostenibilidad": {"nombre": "Sostenibilidad ambiental", "p2025": 5.2092, "p2026": 5.2156, "r2025": 12, "r2026": 13}, "salud": {"nombre": "Salud", "p2025": 6.7115, "p2026": 6.5903, "r2025": 17, "r2026": 19}, "edu_basica": {"nombre": "Educación básica y media", "p2025": 6.4808, "p2026": 6.5282, "r2025": 18, "r2026": 18}, "edu_superior": {"nombre": "Educación superior y formación para el trabajo", "p2025": 4.6313, "p2026": 4.876, "r2025": 12, "r2026": 12}, "entorno_negocios": {"nombre": "Entorno para los negocios", "p2025": 5.3695, "p2026": 6.3615, "r2025": 14, "r2026": 8}, "mercado_laboral": {"nombre": "Mercado laboral", "p2025": 5.2739, "p2026": 5.3875, "r2025": 20, "r2026": 23}, "sistema_financiero": {"nombre": "Sistema financiero", "p2025": 3.2328, "p2026": 3.3428, "r2025": 19, "r2026": 20}, "tamano_mercado": {"nombre": "Tamaño del mercado", "p2025": 7.356, "p2026": 7.1969, "r2025": 3, "r2026": 5}, "sofisticacion": {"nombre": "Sofisticación y diversificación", "p2025": 9.3018, "p2026": 9.2418, "r2025": 3, "r2026": 2}, "innovacion": {"nombre": "Innovación", "p2025": 2.5578, "p2026": 2.3998, "r2025": 15, "r2026": 15}}}, {"departamento": "Tolima", "region": "Centro Sur", "idc_2025": 5.5764, "idc_2026": 5.5431, "rank_2025": 11, "rank_2026": 12, "cambio_pos": -1, "pilares": {"instituciones": {"nombre": "Instituciones", "p2025": 5.1601, "p2026": 5.405, "r2025": 24, "r2026": 20}, "infraestructura": {"nombre": "Infraestructura y equipamiento", "p2025": 5.3549, "p2026": 5.3074, "r2025": 10, "r2026": 8}, "tic": {"nombre": "Adopción TIC", "p2025": 5.5643, "p2026": 5.9767, "r2025": 10, "r2026": 10}, "sostenibilidad": {"nombre": "Sostenibilidad ambiental", "p2025": 5.5494, "p2026": 5.5243, "r2025": 9, "r2026": 10}, "salud": {"nombre": "Salud", "p2025": 7.2104, "p2026": 7.0714, "r2025": 11, "r2026": 12}, "edu_basica": {"nombre": "Educación básica y media", "p2025": 7.5495, "p2026": 7.6705, "r2025": 7, "r2026": 9}, "edu_superior": {"nombre": "Educación superior y formación para el trabajo", "p2025": 4.4952, "p2026": 4.7487, "r2025": 13, "r2026": 13}, "entorno_negocios": {"nombre": "Entorno para los negocios", "p2025": 5.1885, "p2026": 5.0708, "r2025": 16, "r2026": 16}, "mercado_laboral": {"nombre": "Mercado laboral", "p2025": 6.0706, "p2026": 6.2443, "r2025": 17, "r2026": 17}, "sistema_financiero": {"nombre": "Sistema financiero", "p2025": 4.0232, "p2026": 4.375, "r2025": 14, "r2026": 11}, "tamano_mercado": {"nombre": "Tamaño del mercado", "p2025": 5.3173, "p2026": 5.445, "r2025": 21, "r2026": 20}, "sofisticacion": {"nombre": "Sofisticación y diversificación", "p2025": 7.7611, "p2026": 6.429, "r2025": 14, "r2026": 16}, "innovacion": {"nombre": "Innovación", "p2025": 3.2488, "p2026": 2.7922, "r2025": 9, "r2026": 11}}}, {"departamento": "Norte de Santander", "region": "Centro Oriente", "idc_2025": 5.3196, "idc_2026": 5.3889, "rank_2025": 14, "rank_2026": 13, "cambio_pos": 1, "pilares": {"instituciones": {"nombre": "Instituciones", "p2025": 5.5467, "p2026": 5.628, "r2025": 15, "r2026": 18}, "infraestructura": {"nombre": "Infraestructura y equipamiento", "p2025": 5.3045, "p2026": 5.2478, "r2025": 12, "r2026": 10}, "tic": {"nombre": "Adopción TIC", "p2025": 5.1835, "p2026": 5.6185, "r2025": 11, "r2026": 11}, "sostenibilidad": {"nombre": "Sostenibilidad ambiental", "p2025": 3.5621, "p2026": 4.0938, "r2025": 32, "r2026": 31}, "salud": {"nombre": "Salud", "p2025": 6.5309, "p2026": 6.5835, "r2025": 20, "r2026": 20}, "edu_basica": {"nombre": "Educación básica y media", "p2025": 7.5174, "p2026": 7.6941, "r2025": 8, "r2026": 8}, "edu_superior": {"nombre": "Educación superior y formación para el trabajo", "p2025": 4.4563, "p2026": 4.4453, "r2025": 14, "r2026": 15}, "entorno_negocios": {"nombre": "Entorno para los negocios", "p2025": 5.1463, "p2026": 4.6054, "r2025": 17, "r2026": 23}, "mercado_laboral": {"nombre": "Mercado laboral", "p2025": 4.9636, "p2026": 5.0988, "r2025": 26, "r2026": 28}, "sistema_financiero": {"nombre": "Sistema financiero", "p2025": 4.1406, "p2026": 4.2467, "r2025": 10, "r2026": 13}, "tamano_mercado": {"nombre": "Tamaño del mercado", "p2025": 5.7711, "p2026": 5.7659, "r2025": 15, "r2026": 16}, "sofisticacion": {"nombre": "Sofisticación y diversificación", "p2025": 8.4146, "p2026": 8.4347, "r2025": 11, "r2026": 10}, "innovacion": {"nombre": "Innovación", "p2025": 2.6176, "p2026": 2.5933, "r2025": 13, "r2026": 13}}}, {"departamento": "Huila", "region": "Centro Sur", "idc_2025": 5.2165, "idc_2026": 5.2164, "rank_2025": 15, "rank_2026": 14, "cambio_pos": 1, "pilares": {"instituciones": {"nombre": "Instituciones", "p2025": 5.2041, "p2026": 5.7069, "r2025": 23, "r2026": 16}, "infraestructura": {"nombre": "Infraestructura y equipamiento", "p2025": 5.8104, "p2026": 5.4537, "r2025": 3, "r2026": 4}, "tic": {"nombre": "Adopción TIC", "p2025": 4.6382, "p2026": 4.8854, "r2025": 13, "r2026": 13}, "sostenibilidad": {"nombre": "Sostenibilidad ambiental", "p2025": 4.7021, "p2026": 4.2661, "r2025": 20, "r2026": 29}, "salud": {"nombre": "Salud", "p2025": 7.3943, "p2026": 7.1433, "r2025": 10, "r2026": 11}, "edu_basica": {"nombre": "Educación básica y media", "p2025": 7.7875, "p2026": 7.8264, "r2025": 5, "r2026": 6}, "edu_superior": {"nombre": "Educación superior y formación para el trabajo", "p2025": 3.6105, "p2026": 3.6771, "r2025": 20, "r2026": 18}, "entorno_negocios": {"nombre": "Entorno para los negocios", "p2025": 4.3624, "p2026": 4.9444, "r2025": 26, "r2026": 17}, "mercado_laboral": {"nombre": "Mercado laboral", "p2025": 5.523, "p2026": 5.3435, "r2025": 18, "r2026": 25}, "sistema_financiero": {"nombre": "Sistema financiero", "p2025": 5.084, "p2026": 5.1453, "r2025": 3, "r2026": 5}, "tamano_mercado": {"nombre": "Tamaño del mercado", "p2025": 5.6401, "p2026": 5.7841, "r2025": 17, "r2026": 15}, "sofisticacion": {"nombre": "Sofisticación y diversificación", "p2025": 5.4903, "p2026": 5.22, "r2025": 22, "r2026": 20}, "innovacion": {"nombre": "Innovación", "p2025": 2.5671, "p2026": 2.4165, "r2025": 14, "r2026": 14}}}, {"departamento": "Archipiélago de San Andrés", "region": "Caribe", "idc_2025": 5.3319, "idc_2026": 5.1739, "rank_2025": 13, "rank_2026": 15, "cambio_pos": -2, "pilares": {"instituciones": {"nombre": "Instituciones", "p2025": 5.278, "p2026": 5.23, "r2025": 20, "r2026": 24}, "infraestructura": {"nombre": "Infraestructura y equipamiento", "p2025": 4.2118, "p2026": 4.0262, "r2025": 25, "r2026": 26}, "tic": {"nombre": "Adopción TIC", "p2025": 4.0354, "p2026": 4.4674, "r2025": 17, "r2026": 16}, "sostenibilidad": {"nombre": "Sostenibilidad ambiental", "p2025": 4.8242, "p2026": 4.7679, "r2025": 18, "r2026": 20}, "salud": {"nombre": "Salud", "p2025": 8.2269, "p2026": 8.1021, "r2025": 2, "r2026": 2}, "edu_basica": {"nombre": "Educación básica y media", "p2025": 6.9203, "p2026": 6.8552, "r2025": 14, "r2026": 15}, "edu_superior": {"nombre": "Educación superior y formación para el trabajo", "p2025": 4.6838, "p2026": 4.9455, "r2025": 11, "r2026": 11}, "entorno_negocios": {"nombre": "Entorno para los negocios", "p2025": 6.6836, "p2026": 6.5161, "r2025": 4, "r2026": 7}, "mercado_laboral": {"nombre": "Mercado laboral", "p2025": 8.6908, "p2026": 8.6768, "r2025": 1, "r2026": 1}, "sistema_financiero": {"nombre": "Sistema financiero", "p2025": 5.0594, "p2026": 4.754, "r2025": 5, "r2026": 7}, "tamano_mercado": {"nombre": "Tamaño del mercado", "p2025": 3.0828, "p2026": 2.9913, "r2025": 28, "r2026": 28}, "sofisticacion": {"nombre": "Sofisticación y diversificación", "p2025": 5.8141, "p2026": 4.1733, "r2025": 19, "r2026": 24}, "innovacion": {"nombre": "Innovación", "p2025": 1.8034, "p2026": 1.7544, "r2025": 26, "r2026": 24}}}, {"departamento": "Meta", "region": "Llano", "idc_2025": 5.0201, "idc_2026": 5.0778, "rank_2025": 17, "rank_2026": 16, "cambio_pos": 1, "pilares": {"instituciones": {"nombre": "Instituciones", "p2025": 5.5429, "p2026": 5.901, "r2025": 17, "r2026": 13}, "infraestructura": {"nombre": "Infraestructura y equipamiento", "p2025": 4.8799, "p2026": 4.7636, "r2025": 17, "r2026": 17}, "tic": {"nombre": "Adopción TIC", "p2025": 4.4883, "p2026": 4.5662, "r2025": 14, "r2026": 15}, "sostenibilidad": {"nombre": "Sostenibilidad ambiental", "p2025": 4.57, "p2026": 3.9684, "r2025": 22, "r2026": 32}, "salud": {"nombre": "Salud", "p2025": 6.7651, "p2026": 6.7046, "r2025": 16, "r2026": 17}, "edu_basica": {"nombre": "Educación básica y media", "p2025": 7.2543, "p2026": 7.5461, "r2025": 12, "r2026": 10}, "edu_superior": {"nombre": "Educación superior y formación para el trabajo", "p2025": 4.2326, "p2026": 4.5135, "r2025": 16, "r2026": 14}, "entorno_negocios": {"nombre": "Entorno para los negocios", "p2025": 5.5159, "p2026": 5.8029, "r2025": 12, "r2026": 12}, "mercado_laboral": {"nombre": "Mercado laboral", "p2025": 6.8103, "p2026": 6.9927, "r2025": 11, "r2026": 10}, "sistema_financiero": {"nombre": "Sistema financiero", "p2025": 3.499, "p2026": 3.8024, "r2025": 18, "r2026": 18}, "tamano_mercado": {"nombre": "Tamaño del mercado", "p2025": 5.902, "p2026": 5.9059, "r2025": 12, "r2026": 13}, "sofisticacion": {"nombre": "Sofisticación y diversificación", "p2025": 3.7058, "p2026": 3.2781, "r2025": 26, "r2026": 27}, "innovacion": {"nombre": "Innovación", "p2025": 2.0955, "p2026": 2.2664, "r2025": 21, "r2026": 17}}}, {"departamento": "Casanare", "region": "Llano", "idc_2025": 5.0298, "idc_2026": 5.0769, "rank_2025": 16, "rank_2026": 17, "cambio_pos": -1, "pilares": {"instituciones": {"nombre": "Instituciones", "p2025": 5.7434, "p2026": 5.6617, "r2025": 12, "r2026": 17}, "infraestructura": {"nombre": "Infraestructura y equipamiento", "p2025": 5.6589, "p2026": 5.186, "r2025": 6, "r2026": 11}, "tic": {"nombre": "Adopción TIC", "p2025": 3.7252, "p2026": 3.7978, "r2025": 21, "r2026": 21}, "sostenibilidad": {"nombre": "Sostenibilidad ambiental", "p2025": 4.4298, "p2026": 4.6549, "r2025": 25, "r2026": 22}, "salud": {"nombre": "Salud", "p2025": 6.8447, "p2026": 6.8837, "r2025": 15, "r2026": 14}, "edu_basica": {"nombre": "Educación básica y media", "p2025": 7.4819, "p2026": 7.8326, "r2025": 9, "r2026": 5}, "edu_superior": {"nombre": "Educación superior y formación para el trabajo", "p2025": 3.719, "p2026": 3.2101, "r2025": 17, "r2026": 23}, "entorno_negocios": {"nombre": "Entorno para los negocios", "p2025": 5.9724, "p2026": 7.2538, "r2025": 10, "r2026": 4}, "mercado_laboral": {"nombre": "Mercado laboral", "p2025": 7.4281, "p2026": 7.5343, "r2025": 7, "r2026": 7}, "sistema_financiero": {"nombre": "Sistema financiero", "p2025": 3.7247, "p2026": 3.8227, "r2025": 16, "r2026": 17}, "tamano_mercado": {"nombre": "Tamaño del mercado", "p2025": 5.69, "p2026": 5.5544, "r2025": 16, "r2026": 18}, "sofisticacion": {"nombre": "Sofisticación y diversificación", "p2025": 3.5725, "p2026": 2.9417, "r2025": 27, "r2026": 28}, "innovacion": {"nombre": "Innovación", "p2025": 1.3964, "p2026": 1.6658, "r2025": 27, "r2026": 26}}}, {"departamento": "Magdalena", "region": "Caribe", "idc_2025": 4.916, "idc_2026": 5.0649, "rank_2025": 18, "rank_2026": 18, "cambio_pos": 0, "pilares": {"instituciones": {"nombre": "Instituciones", "p2025": 5.9293, "p2026": 6.1494, "r2025": 11, "r2026": 9}, "infraestructura": {"nombre": "Infraestructura y equipamiento", "p2025": 4.8743, "p2026": 4.8314, "r2025": 18, "r2026": 16}, "tic": {"nombre": "Adopción TIC", "p2025": 3.8119, "p2026": 3.9544, "r2025": 20, "r2026": 19}, "sostenibilidad": {"nombre": "Sostenibilidad ambiental", "p2025": 3.7887, "p2026": 4.5015, "r2025": 31, "r2026": 24}, "salud": {"nombre": "Salud", "p2025": 6.4486, "p2026": 6.5101, "r2025": 23, "r2026": 21}, "edu_basica": {"nombre": "Educación básica y media", "p2025": 5.3721, "p2026": 5.5532, "r2025": 26, "r2026": 26}, "edu_superior": {"nombre": "Educación superior y formación para el trabajo", "p2025": 4.2669, "p2026": 4.1074, "r2025": 15, "r2026": 17}, "entorno_negocios": {"nombre": "Entorno para los negocios", "p2025": 5.4022, "p2026": 5.1312, "r2025": 13, "r2026": 15}, "mercado_laboral": {"nombre": "Mercado laboral", "p2025": 5.0234, "p2026": 5.142, "r2025": 25, "r2026": 26}, "sistema_financiero": {"nombre": "Sistema financiero", "p2025": 2.7464, "p2026": 3.7216, "r2025": 23, "r2026": 19}, "tamano_mercado": {"nombre": "Tamaño del mercado", "p2025": 5.8293, "p2026": 6.0278, "r2025": 13, "r2026": 11}, "sofisticacion": {"nombre": "Sofisticación y diversificación", "p2025": 8.1329, "p2026": 8.2592, "r2025": 12, "r2026": 11}, "innovacion": {"nombre": "Innovación", "p2025": 2.2826, "p2026": 1.9548, "r2025": 18, "r2026": 21}}}, {"departamento": "Cauca", "region": "Pacífico", "idc_2025": 4.9066, "idc_2026": 4.9451, "rank_2025": 19, "rank_2026": 19, "cambio_pos": 0, "pilares": {"instituciones": {"nombre": "Instituciones", "p2025": 4.3609, "p2026": 4.0685, "r2025": 32, "r2026": 32}, "infraestructura": {"nombre": "Infraestructura y equipamiento", "p2025": 4.9185, "p2026": 4.7244, "r2025": 16, "r2026": 18}, "tic": {"nombre": "Adopción TIC", "p2025": 4.3705, "p2026": 4.3864, "r2025": 16, "r2026": 17}, "sostenibilidad": {"nombre": "Sostenibilidad ambiental", "p2025": 5.9504, "p2026": 6.5535, "r2025": 5, "r2026": 2}, "salud": {"nombre": "Salud", "p2025": 6.2062, "p2026": 6.349, "r2025": 26, "r2026": 22}, "edu_basica": {"nombre": "Educación básica y media", "p2025": 5.7579, "p2026": 5.8341, "r2025": 25, "r2026": 25}, "edu_superior": {"nombre": "Educación superior y formación para el trabajo", "p2025": 3.6843, "p2026": 3.6505, "r2025": 18, "r2026": 19}, "entorno_negocios": {"nombre": "Entorno para los negocios", "p2025": 4.6639, "p2026": 4.676, "r2025": 22, "r2026": 22}, "mercado_laboral": {"nombre": "Mercado laboral", "p2025": 4.9006, "p2026": 5.1261, "r2025": 27, "r2026": 27}, "sistema_financiero": {"nombre": "Sistema financiero", "p2025": 2.22, "p2026": 2.2521, "r2025": 25, "r2026": 26}, "tamano_mercado": {"nombre": "Tamaño del mercado", "p2025": 5.495, "p2026": 5.5508, "r2025": 20, "r2026": 19}, "sofisticacion": {"nombre": "Sofisticación y diversificación", "p2025": 8.8782, "p2026": 8.7335, "r2025": 7, "r2026": 9}, "innovacion": {"nombre": "Innovación", "p2025": 2.3787, "p2026": 2.3814, "r2025": 16, "r2026": 16}}}, {"departamento": "Cesar", "region": "Caribe", "idc_2025": 4.8243, "idc_2026": 4.826, "rank_2025": 20, "rank_2026": 20, "cambio_pos": 0, "pilares": {"instituciones": {"nombre": "Instituciones", "p2025": 5.5452, "p2026": 5.4167, "r2025": 16, "r2026": 19}, "infraestructura": {"nombre": "Infraestructura y equipamiento", "p2025": 5.2639, "p2026": 5.3596, "r2025": 14, "r2026": 7}, "tic": {"nombre": "Adopción TIC", "p2025": 4.0059, "p2026": 4.3306, "r2025": 19, "r2026": 18}, "sostenibilidad": {"nombre": "Sostenibilidad ambiental", "p2025": 4.4709, "p2026": 4.3275, "r2025": 23, "r2026": 27}, "salud": {"nombre": "Salud", "p2025": 6.9958, "p2026": 6.6335, "r2025": 13, "r2026": 18}, "edu_basica": {"nombre": "Educación básica y media", "p2025": 5.9287, "p2026": 6.0285, "r2025": 23, "r2026": 24}, "edu_superior": {"nombre": "Educación superior y formación para el trabajo", "p2025": 3.6623, "p2026": 3.5145, "r2025": 19, "r2026": 21}, "entorno_negocios": {"nombre": "Entorno para los negocios", "p2025": 4.7898, "p2026": 4.8698, "r2025": 20, "r2026": 18}, "mercado_laboral": {"nombre": "Mercado laboral", "p2025": 5.2728, "p2026": 5.7796, "r2025": 21, "r2026": 19}, "sistema_financiero": {"nombre": "Sistema financiero", "p2025": 2.897, "p2026": 2.9655, "r2025": 20, "r2026": 22}, "tamano_mercado": {"nombre": "Tamaño del mercado", "p2025": 6.8568, "p2026": 6.6457, "r2025": 8, "r2026": 7}, "sofisticacion": {"nombre": "Sofisticación y diversificación", "p2025": 4.9488, "p2026": 5.1282, "r2025": 23, "r2026": 21}, "innovacion": {"nombre": "Innovación", "p2025": 2.078, "p2026": 1.7388, "r2025": 22, "r2026": 25}}}, {"departamento": "Nariño", "region": "Pacífico", "idc_2025": 4.7814, "idc_2026": 4.7468, "rank_2025": 21, "rank_2026": 21, "cambio_pos": 0, "pilares": {"instituciones": {"nombre": "Instituciones", "p2025": 4.9319, "p2026": 5.0354, "r2025": 26, "r2026": 27}, "infraestructura": {"nombre": "Infraestructura y equipamiento", "p2025": 4.6323, "p2026": 4.3586, "r2025": 21, "r2026": 25}, "tic": {"nombre": "Adopción TIC", "p2025": 3.4084, "p2026": 3.6804, "r2025": 22, "r2026": 23}, "sostenibilidad": {"nombre": "Sostenibilidad ambiental", "p2025": 5.8776, "p2026": 6.3547, "r2025": 6, "r2026": 4}, "salud": {"nombre": "Salud", "p2025": 6.3896, "p2026": 6.2903, "r2025": 24, "r2026": 25}, "edu_basica": {"nombre": "Educación básica y media", "p2025": 6.8293, "p2026": 6.6968, "r2025": 15, "r2026": 16}, "edu_superior": {"nombre": "Educación superior y formación para el trabajo", "p2025": 3.5359, "p2026": 3.641, "r2025": 21, "r2026": 20}, "entorno_negocios": {"nombre": "Entorno para los negocios", "p2025": 4.9541, "p2026": 4.8185, "r2025": 18, "r2026": 19}, "mercado_laboral": {"nombre": "Mercado laboral", "p2025": 5.3793, "p2026": 5.5158, "r2025": 19, "r2026": 22}, "sistema_financiero": {"nombre": "Sistema financiero", "p2025": 2.8187, "p2026": 2.9562, "r2025": 22, "r2026": 23}, "tamano_mercado": {"nombre": "Tamaño del mercado", "p2025": 5.2506, "p2026": 5.3445, "r2025": 22, "r2026": 22}, "sofisticacion": {"nombre": "Sofisticación y diversificación", "p2025": 6.242, "p2026": 4.9847, "r2025": 18, "r2026": 22}, "innovacion": {"nombre": "Innovación", "p2025": 1.9091, "p2026": 2.0319, "r2025": 24, "r2026": 20}}}, {"departamento": "Córdoba", "region": "Caribe", "idc_2025": 4.5633, "idc_2026": 4.7175, "rank_2025": 22, "rank_2026": 22, "cambio_pos": 0, "pilares": {"instituciones": {"nombre": "Instituciones", "p2025": 4.6259, "p2026": 5.333, "r2025": 29, "r2026": 22}, "infraestructura": {"nombre": "Infraestructura y equipamiento", "p2025": 4.5746, "p2026": 4.6383, "r2025": 24, "r2026": 21}, "tic": {"nombre": "Adopción TIC", "p2025": 3.2653, "p2026": 3.386, "r2025": 24, "r2026": 25}, "sostenibilidad": {"nombre": "Sostenibilidad ambiental", "p2025": 4.4295, "p2026": 5.0988, "r2025": 26, "r2026": 14}, "salud": {"nombre": "Salud", "p2025": 6.541, "p2026": 6.3143, "r2025": 19, "r2026": 24}, "edu_basica": {"nombre": "Educación básica y media", "p2025": 6.3812, "p2026": 6.5171, "r2025": 20, "r2026": 20}, "edu_superior": {"nombre": "Educación superior y formación para el trabajo", "p2025": 3.4931, "p2026": 4.3403, "r2025": 22, "r2026": 16}, "entorno_negocios": {"nombre": "Entorno para los negocios", "p2025": 4.6726, "p2026": 4.7513, "r2025": 21, "r2026": 20}, "mercado_laboral": {"nombre": "Mercado laboral", "p2025": 4.8155, "p2026": 4.6867, "r2025": 28, "r2026": 31}, "sistema_financiero": {"nombre": "Sistema financiero", "p2025": 2.1617, "p2026": 2.1943, "r2025": 27, "r2026": 27}, "tamano_mercado": {"nombre": "Tamaño del mercado", "p2025": 5.6295, "p2026": 5.6241, "r2025": 18, "r2026": 17}, "sofisticacion": {"nombre": "Sofisticación y diversificación", "p2025": 6.3937, "p2026": 6.4978, "r2025": 16, "r2026": 15}, "innovacion": {"nombre": "Innovación", "p2025": 2.3388, "p2026": 1.9451, "r2025": 17, "r2026": 22}}}, {"departamento": "Caquetá", "region": "Centro Sur", "idc_2025": 4.2496, "idc_2026": 4.572, "rank_2025": 25, "rank_2026": 23, "cambio_pos": 2, "pilares": {"instituciones": {"nombre": "Instituciones", "p2025": 4.8434, "p2026": 5.0223, "r2025": 27, "r2026": 28}, "infraestructura": {"nombre": "Infraestructura y equipamiento", "p2025": 4.6571, "p2026": 4.5694, "r2025": 20, "r2026": 23}, "tic": {"nombre": "Adopción TIC", "p2025": 4.0186, "p2026": 3.9113, "r2025": 18, "r2026": 20}, "sostenibilidad": {"nombre": "Sostenibilidad ambiental", "p2025": 5.0053, "p2026": 4.9307, "r2025": 13, "r2026": 17}, "salud": {"nombre": "Salud", "p2025": 6.0952, "p2026": 6.7122, "r2025": 27, "r2026": 16}, "edu_basica": {"nombre": "Educación básica y media", "p2025": 5.8353, "p2026": 6.226, "r2025": 24, "r2026": 22}, "edu_superior": {"nombre": "Educación superior y formación para el trabajo", "p2025": 2.6129, "p2026": 3.1735, "r2025": 26, "r2026": 24}, "entorno_negocios": {"nombre": "Entorno para los negocios", "p2025": 2.7109, "p2026": 4.0061, "r2025": 33, "r2026": 28}, "mercado_laboral": {"nombre": "Mercado laboral", "p2025": 5.0571, "p2026": 5.5275, "r2025": 24, "r2026": 21}, "sistema_financiero": {"nombre": "Sistema financiero", "p2025": 4.0525, "p2026": 4.3236, "r2025": 12, "r2026": 12}, "tamano_mercado": {"nombre": "Tamaño del mercado", "p2025": 3.7802, "p2026": 3.7904, "r2025": 27, "r2026": 27}, "sofisticacion": {"nombre": "Sofisticación y diversificación", "p2025": 4.6936, "p2026": 5.3449, "r2025": 24, "r2026": 19}, "innovacion": {"nombre": "Innovación", "p2025": 1.8828, "p2026": 1.8977, "r2025": 25, "r2026": 23}}}, {"departamento": "Sucre", "region": "Caribe", "idc_2025": 4.4201, "idc_2026": 4.4484, "rank_2025": 23, "rank_2026": 24, "cambio_pos": -1, "pilares": {"instituciones": {"nombre": "Instituciones", "p2025": 5.4823, "p2026": 5.2053, "r2025": 19, "r2026": 25}, "infraestructura": {"nombre": "Infraestructura y equipamiento", "p2025": 4.6093, "p2026": 4.7076, "r2025": 23, "r2026": 19}, "tic": {"nombre": "Adopción TIC", "p2025": 3.3515, "p2026": 3.7774, "r2025": 23, "r2026": 22}, "sostenibilidad": {"nombre": "Sostenibilidad ambiental", "p2025": 4.9771, "p2026": 5.0529, "r2025": 14, "r2026": 16}, "salud": {"nombre": "Salud", "p2025": 6.9929, "p2026": 6.894, "r2025": 14, "r2026": 13}, "edu_basica": {"nombre": "Educación básica y media", "p2025": 6.4721, "p2026": 6.5194, "r2025": 19, "r2026": 19}, "edu_superior": {"nombre": "Educación superior y formación para el trabajo", "p2025": 3.3226, "p2026": 3.3642, "r2025": 23, "r2026": 22}, "entorno_negocios": {"nombre": "Entorno para los negocios", "p2025": 4.5651, "p2026": 4.1869, "r2025": 24, "r2026": 27}, "mercado_laboral": {"nombre": "Mercado laboral", "p2025": 4.5782, "p2026": 4.3869, "r2025": 30, "r2026": 33}, "sistema_financiero": {"nombre": "Sistema financiero", "p2025": 2.6298, "p2026": 2.7211, "r2025": 24, "r2026": 24}, "tamano_mercado": {"nombre": "Tamaño del mercado", "p2025": 5.5374, "p2026": 5.348, "r2025": 19, "r2026": 21}, "sofisticacion": {"nombre": "Sofisticación y diversificación", "p2025": 2.7522, "p2026": 3.4254, "r2025": 29, "r2026": 26}, "innovacion": {"nombre": "Innovación", "p2025": 2.1908, "p2026": 2.2405, "r2025": 19, "r2026": 18}}}, {"departamento": "Arauca", "region": "Llano", "idc_2025": 4.251, "idc_2026": 4.3903, "rank_2025": 24, "rank_2026": 25, "cambio_pos": -1, "pilares": {"instituciones": {"nombre": "Instituciones", "p2025": 4.379, "p2026": 3.9696, "r2025": 31, "r2026": 33}, "infraestructura": {"nombre": "Infraestructura y equipamiento", "p2025": 4.1501, "p2026": 4.5946, "r2025": 27, "r2026": 22}, "tic": {"nombre": "Adopción TIC", "p2025": 1.9393, "p2026": 2.4412, "r2025": 29, "r2026": 28}, "sostenibilidad": {"nombre": "Sostenibilidad ambiental", "p2025": 4.3346, "p2026": 4.3455, "r2025": 28, "r2026": 26}, "salud": {"nombre": "Salud", "p2025": 6.662, "p2026": 6.8213, "r2025": 18, "r2026": 15}, "edu_basica": {"nombre": "Educación básica y media", "p2025": 6.7861, "p2026": 6.6771, "r2025": 17, "r2026": 17}, "edu_superior": {"nombre": "Educación superior y formación para el trabajo", "p2025": 3.0004, "p2026": 3.0372, "r2025": 24, "r2026": 25}, "entorno_negocios": {"nombre": "Entorno para los negocios", "p2025": 3.5703, "p2026": 4.1882, "r2025": 32, "r2026": 26}, "mercado_laboral": {"nombre": "Mercado laboral", "p2025": 4.0138, "p2026": 5.3748, "r2025": 33, "r2026": 24}, "sistema_financiero": {"nombre": "Sistema financiero", "p2025": 3.7769, "p2026": 4.1069, "r2025": 15, "r2026": 15}, "tamano_mercado": {"nombre": "Tamaño del mercado", "p2025": 3.9566, "p2026": 4.1231, "r2025": 26, "r2026": 26}, "sofisticacion": {"nombre": "Sofisticación y diversificación", "p2025": 7.9134, "p2026": 7.182, "r2025": 13, "r2026": 13}, "innovacion": {"nombre": "Innovación", "p2025": 0.7806, "p2026": 0.2125, "r2025": 29, "r2026": 31}}}, {"departamento": "La Guajira", "region": "Caribe", "idc_2025": 4.2173, "idc_2026": 4.3733, "rank_2025": 26, "rank_2026": 26, "cambio_pos": 0, "pilares": {"instituciones": {"nombre": "Instituciones", "p2025": 4.8283, "p2026": 5.3829, "r2025": 28, "r2026": 21}, "infraestructura": {"nombre": "Infraestructura y equipamiento", "p2025": 4.7165, "p2026": 4.668, "r2025": 19, "r2026": 20}, "tic": {"nombre": "Adopción TIC", "p2025": 2.8501, "p2026": 3.1539, "r2025": 26, "r2026": 26}, "sostenibilidad": {"nombre": "Sostenibilidad ambiental", "p2025": 5.5483, "p2026": 6.3755, "r2025": 10, "r2026": 3}, "salud": {"nombre": "Salud", "p2025": 5.3952, "p2026": 4.9927, "r2025": 29, "r2026": 30}, "edu_basica": {"nombre": "Educación básica y media", "p2025": 5.2249, "p2026": 5.3937, "r2025": 27, "r2026": 28}, "edu_superior": {"nombre": "Educación superior y formación para el trabajo", "p2025": 2.2388, "p2026": 3.0369, "r2025": 27, "r2026": 26}, "entorno_negocios": {"nombre": "Entorno para los negocios", "p2025": 4.1013, "p2026": 3.9959, "r2025": 29, "r2026": 29}, "mercado_laboral": {"nombre": "Mercado laboral", "p2025": 4.4397, "p2026": 4.4509, "r2025": 31, "r2026": 32}, "sistema_financiero": {"nombre": "Sistema financiero", "p2025": 1.7585, "p2026": 2.0245, "r2025": 30, "r2026": 28}, "tamano_mercado": {"nombre": "Tamaño del mercado", "p2025": 6.9929, "p2026": 6.4685, "r2025": 7, "r2026": 8}, "sofisticacion": {"nombre": "Sofisticación y diversificación", "p2025": 4.612, "p2026": 4.8151, "r2025": 25, "r2026": 23}, "innovacion": {"nombre": "Innovación", "p2025": 2.1181, "p2026": 2.0948, "r2025": 20, "r2026": 19}}}, {"departamento": "Putumayo", "region": "Centro Sur", "idc_2025": 3.8349, "idc_2026": 3.9626, "rank_2025": 27, "rank_2026": 27, "cambio_pos": 0, "pilares": {"instituciones": {"nombre": "Instituciones", "p2025": 4.3972, "p2026": 4.7143, "r2025": 30, "r2026": 29}, "infraestructura": {"nombre": "Infraestructura y equipamiento", "p2025": 3.7937, "p2026": 3.7232, "r2025": 28, "r2026": 28}, "tic": {"nombre": "Adopción TIC", "p2025": 2.3687, "p2026": 3.3977, "r2025": 27, "r2026": 24}, "sostenibilidad": {"nombre": "Sostenibilidad ambiental", "p2025": 6.388, "p2026": 6.1405, "r2025": 2, "r2026": 5}, "salud": {"nombre": "Salud", "p2025": 6.4972, "p2026": 6.108, "r2025": 21, "r2026": 26}, "edu_basica": {"nombre": "Educación básica y media", "p2025": 6.2255, "p2026": 6.1082, "r2025": 22, "r2026": 23}, "edu_superior": {"nombre": "Educación superior y formación para el trabajo", "p2025": 2.0302, "p2026": 2.093, "r2025": 30, "r2026": 30}, "entorno_negocios": {"nombre": "Entorno para los negocios", "p2025": 4.1024, "p2026": 4.4949, "r2025": 28, "r2026": 25}, "mercado_laboral": {"nombre": "Mercado laboral", "p2025": 4.0648, "p2026": 4.852, "r2025": 32, "r2026": 29}, "sistema_financiero": {"nombre": "Sistema financiero", "p2025": 2.1963, "p2026": 2.4291, "r2025": 26, "r2026": 25}, "tamano_mercado": {"nombre": "Tamaño del mercado", "p2025": 4.2773, "p2026": 4.4859, "r2025": 24, "r2026": 24}, "sofisticacion": {"nombre": "Sofisticación y diversificación", "p2025": 2.9189, "p2026": 2.4835, "r2025": 28, "r2026": 29}, "innovacion": {"nombre": "Innovación", "p2025": 0.5931, "p2026": 0.4831, "r2025": 31, "r2026": 30}}}, {"departamento": "Guaviare", "region": "Llano", "idc_2025": 3.8277, "idc_2026": 3.8009, "rank_2025": 28, "rank_2026": 28, "cambio_pos": 0, "pilares": {"instituciones": {"nombre": "Instituciones", "p2025": 5.6392, "p2026": 4.4055, "r2025": 13, "r2026": 31}, "infraestructura": {"nombre": "Infraestructura y equipamiento", "p2025": 4.1953, "p2026": 3.7964, "r2025": 26, "r2026": 27}, "tic": {"nombre": "Adopción TIC", "p2025": 3.0236, "p2026": 2.9601, "r2025": 25, "r2026": 27}, "sostenibilidad": {"nombre": "Sostenibilidad ambiental", "p2025": 4.7496, "p2026": 4.809, "r2025": 19, "r2026": 19}, "salud": {"nombre": "Salud", "p2025": 6.2599, "p2026": 5.9846, "r2025": 25, "r2026": 27}, "edu_basica": {"nombre": "Educación básica y media", "p2025": 5.1948, "p2026": 5.4388, "r2025": 28, "r2026": 27}, "edu_superior": {"nombre": "Educación superior y formación para el trabajo", "p2025": 2.208, "p2026": 2.4971, "r2025": 28, "r2026": 28}, "entorno_negocios": {"nombre": "Entorno para los negocios", "p2025": 6.1151, "p2026": 5.3793, "r2025": 9, "r2026": 14}, "mercado_laboral": {"nombre": "Mercado laboral", "p2025": 7.1971, "p2026": 7.5269, "r2025": 8, "r2026": 8}, "sistema_financiero": {"nombre": "Sistema financiero", "p2025": 4.0456, "p2026": 4.399, "r2025": 13, "r2026": 10}, "tamano_mercado": {"nombre": "Tamaño del mercado", "p2025": 1.0431, "p2026": 2.1304, "r2025": 32, "r2026": 32}, "sofisticacion": {"nombre": "Sofisticación y diversificación", "p2025": 0.0, "p2026": 0.0, "r2025": 32, "r2026": 33}, "innovacion": {"nombre": "Innovación", "p2025": 0.0894, "p2026": 0.0839, "r2025": 32, "r2026": 32}}}, {"departamento": "Chocó", "region": "Pacífico", "idc_2025": 3.6886, "idc_2026": 3.6987, "rank_2025": 29, "rank_2026": 29, "cambio_pos": 0, "pilares": {"instituciones": {"nombre": "Instituciones", "p2025": 4.1503, "p2026": 4.5818, "r2025": 33, "r2026": 30}, "infraestructura": {"nombre": "Infraestructura y equipamiento", "p2025": 2.8167, "p2026": 2.7306, "r2025": 30, "r2026": 31}, "tic": {"nombre": "Adopción TIC", "p2025": 2.0236, "p2026": 2.2923, "r2025": 28, "r2026": 29}, "sostenibilidad": {"nombre": "Sostenibilidad ambiental", "p2025": 7.179, "p2026": 7.2609, "r2025": 1, "r2026": 1}, "salud": {"nombre": "Salud", "p2025": 3.6186, "p2026": 3.7014, "r2025": 33, "r2026": 33}, "edu_basica": {"nombre": "Educación básica y media", "p2025": 3.7631, "p2026": 3.9424, "r2025": 29, "r2026": 29}, "edu_superior": {"nombre": "Educación superior y formación para el trabajo", "p2025": 1.2588, "p2026": 1.2691, "r2025": 32, "r2026": 33}, "entorno_negocios": {"nombre": "Entorno para los negocios", "p2025": 4.2116, "p2026": 3.2564, "r2025": 27, "r2026": 33}, "mercado_laboral": {"nombre": "Mercado laboral", "p2025": 4.7324, "p2026": 4.7337, "r2025": 29, "r2026": 30}, "sistema_financiero": {"nombre": "Sistema financiero", "p2025": 1.4299, "p2026": 1.4783, "r2025": 32, "r2026": 32}, "tamano_mercado": {"nombre": "Tamaño del mercado", "p2025": 4.2389, "p2026": 4.2637, "r2025": 25, "r2026": 25}, "sofisticacion": {"nombre": "Sofisticación y diversificación", "p2025": 6.5641, "p2026": 7.1271, "r2025": 15, "r2026": 14}, "innovacion": {"nombre": "Innovación", "p2025": 1.9655, "p2026": 1.4457, "r2025": 23, "r2026": 27}}}, {"departamento": "Amazonas", "region": "Centro Sur", "idc_2025": 3.4265, "idc_2026": 3.4284, "rank_2025": 30, "rank_2026": 30, "cambio_pos": 0, "pilares": {"instituciones": {"nombre": "Instituciones", "p2025": 5.2441, "p2026": 5.3284, "r2025": 21, "r2026": 23}, "infraestructura": {"nombre": "Infraestructura y equipamiento", "p2025": 2.794, "p2026": 2.9323, "r2025": 31, "r2026": 29}, "tic": {"nombre": "Adopción TIC", "p2025": 1.715, "p2026": 1.9057, "r2025": 31, "r2026": 30}, "sostenibilidad": {"nombre": "Sostenibilidad ambiental", "p2025": 4.6396, "p2026": 4.1911, "r2025": 21, "r2026": 30}, "salud": {"nombre": "Salud", "p2025": 4.7419, "p2026": 5.2199, "r2025": 31, "r2026": 29}, "edu_basica": {"nombre": "Educación básica y media", "p2025": 3.5062, "p2026": 3.6978, "r2025": 30, "r2026": 30}, "edu_superior": {"nombre": "Educación superior y formación para el trabajo", "p2025": 2.7074, "p2026": 2.8261, "r2025": 25, "r2026": 27}, "entorno_negocios": {"nombre": "Entorno para los negocios", "p2025": 4.6546, "p2026": 4.7019, "r2025": 23, "r2026": 21}, "mercado_laboral": {"nombre": "Mercado laboral", "p2025": 6.7145, "p2026": 6.7399, "r2025": 13, "r2026": 14}, "sistema_financiero": {"nombre": "Sistema financiero", "p2025": 1.6158, "p2026": 1.9687, "r2025": 31, "r2026": 30}, "tamano_mercado": {"nombre": "Tamaño del mercado", "p2025": 2.4307, "p2026": 2.3449, "r2025": 29, "r2026": 29}, "sofisticacion": {"nombre": "Sofisticación y diversificación", "p2025": 0.5924, "p2026": 0.0, "r2025": 30, "r2026": 33}, "innovacion": {"nombre": "Innovación", "p2025": 3.1882, "p2026": 2.7119, "r2025": 10, "r2026": 12}}}, {"departamento": "Guainía", "region": "Llano", "idc_2025": 2.8851, "idc_2026": 3.336, "rank_2025": 32, "rank_2026": 31, "cambio_pos": 1, "pilares": {"instituciones": {"nombre": "Instituciones", "p2025": 6.2578, "p2026": 6.1471, "r2025": 7, "r2026": 10}, "infraestructura": {"nombre": "Infraestructura y equipamiento", "p2025": 1.9184, "p2026": 1.9316, "r2025": 32, "r2026": 32}, "tic": {"nombre": "Adopción TIC", "p2025": 1.8946, "p2026": 1.835, "r2025": 30, "r2026": 31}, "sostenibilidad": {"nombre": "Sostenibilidad ambiental", "p2025": 4.9451, "p2026": 4.7091, "r2025": 15, "r2026": 21}, "salud": {"nombre": "Salud", "p2025": 3.6758, "p2026": 5.389, "r2025": 32, "r2026": 28}, "edu_basica": {"nombre": "Educación básica y media", "p2025": 2.8614, "p2026": 3.1543, "r2025": 31, "r2026": 31}, "edu_superior": {"nombre": "Educación superior y formación para el trabajo", "p2025": 1.6143, "p2026": 1.8813, "r2025": 31, "r2026": 31}, "entorno_negocios": {"nombre": "Entorno para los negocios", "p2025": 3.6282, "p2026": 3.7643, "r2025": 30, "r2026": 30}, "mercado_laboral": {"nombre": "Mercado laboral", "p2025": 5.1859, "p2026": 5.6334, "r2025": 23, "r2026": 20}, "sistema_financiero": {"nombre": "Sistema financiero", "p2025": 1.9446, "p2026": 1.966, "r2025": 28, "r2026": 31}, "tamano_mercado": {"nombre": "Tamaño del mercado", "p2025": 2.0699, "p2026": 2.1449, "r2025": 30, "r2026": 31}, "sofisticacion": {"nombre": "Sofisticación y diversificación", "p2025": 0.476, "p2026": 3.7826, "r2025": 31, "r2026": 25}, "innovacion": {"nombre": "Innovación", "p2025": 1.0343, "p2026": 1.0298, "r2025": 28, "r2026": 28}}}, {"departamento": "Vichada", "region": "Llano", "idc_2025": 2.5694, "idc_2026": 2.9167, "rank_2025": 33, "rank_2026": 32, "cambio_pos": 1, "pilares": {"instituciones": {"nombre": "Instituciones", "p2025": 5.0417, "p2026": 5.1945, "r2025": 25, "r2026": 26}, "infraestructura": {"nombre": "Infraestructura y equipamiento", "p2025": 1.3927, "p2026": 1.5318, "r2025": 33, "r2026": 33}, "tic": {"nombre": "Adopción TIC", "p2025": 0.9278, "p2026": 1.2131, "r2025": 32, "r2026": 32}, "sostenibilidad": {"nombre": "Sostenibilidad ambiental", "p2025": 4.9051, "p2026": 5.3743, "r2025": 17, "r2026": 12}, "salud": {"nombre": "Salud", "p2025": 5.4474, "p2026": 4.2209, "r2025": 28, "r2026": 31}, "edu_basica": {"nombre": "Educación básica y media", "p2025": 2.6809, "p2026": 2.5986, "r2025": 32, "r2026": 32}, "edu_superior": {"nombre": "Educación superior y formación para el trabajo", "p2025": 2.0892, "p2026": 2.139, "r2025": 29, "r2026": 29}, "entorno_negocios": {"nombre": "Entorno para los negocios", "p2025": 3.6274, "p2026": 3.4939, "r2025": 31, "r2026": 31}, "mercado_laboral": {"nombre": "Mercado laboral", "p2025": 5.2244, "p2026": 6.4935, "r2025": 22, "r2026": 15}, "sistema_financiero": {"nombre": "Sistema financiero", "p2025": 1.1294, "p2026": 1.1229, "r2025": 33, "r2026": 33}, "tamano_mercado": {"nombre": "Tamaño del mercado", "p2025": 0.916, "p2026": 2.3239, "r2025": 33, "r2026": 30}, "sofisticacion": {"nombre": "Sofisticación y diversificación", "p2025": 0.0, "p2026": 1.6313, "r2025": 33, "r2026": 30}, "innovacion": {"nombre": "Innovación", "p2025": 0.0199, "p2026": 0.5795, "r2025": 33, "r2026": 29}}}, {"departamento": "Vaupés", "region": "Llano", "idc_2025": 3.376, "idc_2026": 2.8085, "rank_2025": 31, "rank_2026": 33, "cambio_pos": -2, "pilares": {"instituciones": {"nombre": "Instituciones", "p2025": 5.96, "p2026": 5.9553, "r2025": 10, "r2026": 12}, "infraestructura": {"nombre": "Infraestructura y equipamiento", "p2025": 2.8551, "p2026": 2.7501, "r2025": 29, "r2026": 30}, "tic": {"nombre": "Adopción TIC", "p2025": 0.8102, "p2026": 0.9718, "r2025": 33, "r2026": 33}, "sostenibilidad": {"nombre": "Sostenibilidad ambiental", "p2025": 4.4454, "p2026": 4.886, "r2025": 24, "r2026": 18}, "salud": {"nombre": "Salud", "p2025": 4.8585, "p2026": 3.8806, "r2025": 30, "r2026": 32}, "edu_basica": {"nombre": "Educación básica y media", "p2025": 2.3714, "p2026": 2.2206, "r2025": 33, "r2026": 33}, "edu_superior": {"nombre": "Educación superior y formación para el trabajo", "p2025": 0.7954, "p2026": 1.7977, "r2025": 33, "r2026": 32}, "entorno_negocios": {"nombre": "Entorno para los negocios", "p2025": 4.5154, "p2026": 3.3342, "r2025": 25, "r2026": 32}, "mercado_laboral": {"nombre": "Mercado laboral", "p2025": 6.653, "p2026": 6.8862, "r2025": 14, "r2026": 12}, "sistema_financiero": {"nombre": "Sistema financiero", "p2025": 1.8791, "p2026": 1.982, "r2025": 29, "r2026": 29}, "tamano_mercado": {"nombre": "Tamaño del mercado", "p2025": 1.8051, "p2026": 1.7933, "r2025": 31, "r2026": 33}, "sofisticacion": {"nombre": "Sofisticación y diversificación", "p2025": 6.336, "p2026": 0.0, "r2025": 17, "r2026": 33}, "innovacion": {"nombre": "Innovación", "p2025": 0.6031, "p2026": 0.0524, "r2025": 30, "r2026": 33}}}]};
+const PILLARS = DATA.meta.pilares;            // [{key,nombre}]
+const DEPTS = DATA.departamentos;             // sorted by rank_2026
+const tip = document.getElementById('tip');
+const fmt = v => (v==null? '–' : v.toLocaleString('es-CO',{minimumFractionDigits:2,maximumFractionDigits:2}));
+
+// metric helpers: 'idc' or pillar key, year 2026
+function score(d, key, year){ return key==='idc' ? d['idc_'+year] : d.pilares[key]['p'+year]; }
+function rank(d, key, year){ return key==='idc' ? d['rank_'+year] : d.pilares[key]['r'+year]; }
+const metricLabel = key => key==='idc' ? 'IDC general' : PILLARS.find(p=>p.key===key).nombre;
+
+// color scale (red→yellow→green) over global 2026 score range
+const allScores = [];
+DEPTS.forEach(d=>{ allScores.push(d.idc_2026); PILLARS.forEach(p=>{const v=d.pilares[p.key].p2026; if(v!=null)allScores.push(v);}); });
+const sMin=Math.min(...allScores), sMax=Math.max(...allScores);
+const color = d3.scaleSequential(d3.interpolateRdYlGn).domain([sMin, sMax]);
+
+let SELECTED = DEPTS[0].departamento;         // primary selected dept
+const byName = Object.fromEntries(DEPTS.map(d=>[d.departamento,d]));
+
+/* ---------- KPIs ---------- */
+function buildKPIs(){
+  const leader = DEPTS[0];
+  const up = [...DEPTS].sort((a,b)=>b.cambio_pos-a.cambio_pos)[0];
+  const down = [...DEPTS].sort((a,b)=>a.cambio_pos-b.cambio_pos)[0];
+  const gap = (DEPTS[0].idc_2026 - DEPTS[DEPTS.length-1].idc_2026);
+  const cards = [
+    {lab:'Líder 2026', val:leader.departamento, det:'IDC '+fmt(leader.idc_2026)},
+    {lab:'Mayor ascenso', val:up.departamento, det:(up.cambio_pos>0?'▲ '+up.cambio_pos+' posiciones':'sin cambio')},
+    {lab:'Mayor descenso', val:down.departamento, det:(down.cambio_pos<0?'▼ '+Math.abs(down.cambio_pos)+' posiciones':'sin cambio')},
+    {lab:'Brecha máx–mín', val:fmt(gap)+' pts', det:DEPTS[0].departamento+' vs '+DEPTS[DEPTS.length-1].departamento},
+  ];
+  document.getElementById('kpis').innerHTML = cards.map(c=>
+    `<div class="kpi"><div class="lab">${c.lab}</div><div class="val">${c.val}</div><div class="det">${c.det}</div></div>`).join('');
+}
+
+/* ---------- tabs ---------- */
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');
+  document.querySelector(`.panel[data-panel="${t.dataset.tab}"]`).classList.add('active');
+  if(t.dataset.tab==='mapa') drawMap();
+});
+
+/* ---------- selectors population ---------- */
+const metricOpts = [{key:'idc',nombre:'IDC general'}].concat(PILLARS);
+['mapmetric'].forEach(id=>{
+  const s=document.getElementById(id);
+  s.innerHTML = metricOpts.map(o=>`<option value="${o.key}">${o.nombre}</option>`).join('');
+});
+const regions = [...new Set(DEPTS.map(d=>d.region))].sort();
+document.getElementById('regsel').innerHTML = '<option value="">Todas</option>'+regions.map(r=>`<option>${r}</option>`).join('');
+
+/* ---------- TABLE ---------- */
+let sortKey='rank_2026', sortAsc=true;
+function getSortVal(d,k){
+  if(k==='departamento')return d.departamento;
+  if(k==='region')return d.region;
+  if(k==='rank_2026')return d.rank_2026;
+  if(k==='cambio')return d.cambio_pos;
+  if(k==='idc_2026')return d.idc_2026;
+  if(k==='idc_2025')return d.idc_2025;
+  return d.pilares[k].p2026; // pillar key
+}
+function buildTable(){
+  const q=document.getElementById('q').value.trim().toLowerCase();
+  const reg=document.getElementById('regsel').value;
+  let rows = DEPTS.filter(d=> (!q || d.departamento.toLowerCase().includes(q)) && (!reg || d.region===reg));
+  rows.sort((a,b)=>{
+    let x=getSortVal(a,sortKey), y=getSortVal(b,sortKey);
+    if(typeof x==='string'){return sortAsc? x.localeCompare(y):y.localeCompare(x);}
+    return sortAsc? x-y : y-x;
+  });
+  const thead=document.querySelector('#tbl thead');
+  let h='<tr><th class="sortable" data-k="rank_2026">Pos<br>2026</th><th class="sortable" data-k="cambio">Δ</th>'+
+        '<th class="sortable depth" data-k="departamento">Departamento</th>'+
+        '<th class="sortable" data-k="region">Región</th>'+
+        '<th class="sortable" data-k="idc_2026">IDC<br>2026</th>'+
+        '<th class="sortable" data-k="idc_2025">IDC<br>2025</th>';
+  PILLARS.forEach((p,i)=> h+=`<th class="sortable" data-k="${p.key}" title="${p.nombre}">P${i+1}</th>`);
+  h+='</tr>';
+  thead.innerHTML=h;
+  thead.querySelectorAll('th.sortable').forEach(th=>th.onclick=()=>{
+    const k=th.dataset.k; if(sortKey===k)sortAsc=!sortAsc; else{sortKey=k;sortAsc=(k==='rank_2026');}
+    buildTable();
+  });
+  const tb=document.querySelector('#tbl tbody');
+  tb.innerHTML = rows.map(d=>{
+    const dlt = d.cambio_pos>0?`<span class="delta up">▲${d.cambio_pos}</span>`:
+                d.cambio_pos<0?`<span class="delta down">▼${Math.abs(d.cambio_pos)}</span>`:`<span class="delta eq">–</span>`;
+    let cells = PILLARS.map(p=>{const v=d.pilares[p.key].p2026;
+        return `<td style="background:${v==null?'#fff':color(v)}33">${fmt(v)}</td>`;}).join('');
+    const idcC = `<td><span class="chip" style="background:${color(d.idc_2026)}">${fmt(d.idc_2026)}</span></td>`;
+    return `<tr data-d="${d.departamento}" class="${d.departamento===SELECTED?'sel':''}">
+      <td>${d.rank_2026}</td><td>${dlt}</td><td class="dept">${d.departamento}</td>
+      <td style="color:var(--muted);font-size:12px">${d.region}</td>
+      ${idcC}<td>${fmt(d.idc_2025)}</td>${cells}</tr>`;
+  }).join('');
+  tb.querySelectorAll('tr').forEach(tr=>tr.onclick=()=>selectDept(tr.dataset.d));
+  document.getElementById('tcount').textContent = rows.length+' de '+DEPTS.length+' departamentos';
+}
+document.getElementById('q').oninput=buildTable;
+document.getElementById('regsel').onchange=buildTable;
+
+/* ---------- MAP ---------- */
+const GEO_URLS = [
+  'https://gist.githubusercontent.com/john-guerra/43c7656821069d00dcbc/raw/be6a6e239cd5b5b803c6e7c2ec405b793a9064dd/Colombia.geo.json',
+  'https://raw.githubusercontent.com/marcovega/colombia-json/master/colombia.geo.json'
+];
+let geo=null, mapMetric='idc', mapDrawn=false, mapFailed=false;
+function normName(s){return (s||'').toString().toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Z ]/g,'').replace(/\s+/g,' ').trim();}
+const datasetNorm = {}; DEPTS.forEach(d=>datasetNorm[normName(d.departamento.replace(', D.C.',''))]=d.departamento);
+function matchDept(featProps){
+  const raw = featProps.NOMBRE_DPT || featProps.DPTO || featProps.dpt || featProps.name || featProps.NOMBRE || featProps.departamento || Object.values(featProps)[0];
+  let n = normName(raw);
+  if(n.startsWith('BOGOTA') || n.includes('SANTAFE DE BOGOTA')) return 'Bogotá, D.C.';
+  if(n.includes('SAN ANDRES')) return 'Archipiélago de San Andrés';
+  if(n.includes('VALLE')) return 'Valle del Cauca';
+  if(datasetNorm[n]) return datasetNorm[n];
+  // loose contains
+  for(const k in datasetNorm){ if(k && (n===k || n.includes(k) || k.includes(n))) return datasetNorm[k]; }
+  return null;
+}
+async function loadGeo(){
+  for(const url of GEO_URLS){
+    try{ const r=await fetch(url); if(!r.ok)continue; const j=await r.json(); if(j&&j.features&&j.features.length){return j;} }catch(e){}
+  }
+  return null;
+}
+function legendGradient(){
+  const stops=[]; for(let i=0;i<=10;i++){const v=sMin+(sMax-sMin)*i/10; stops.push(color(v));}
+  document.getElementById('legbar').style.background='linear-gradient(90deg,'+stops.join(',')+')';
+  document.getElementById('legmin').textContent=fmt(sMin);
+  document.getElementById('legmax').textContent=fmt(sMax);
+  document.getElementById('legtitle').textContent=metricLabel(mapMetric);
+}
+async function drawMap(){
+  legendGradient();
+  if(mapDrawn){recolorMap();return;}
+  if(mapFailed){drawTileMap();return;}
+  document.getElementById('mapstatus').textContent='Cargando mapa…';
+  if(!geo) geo = await loadGeo();
+  if(!geo){ mapFailed=true; document.getElementById('mapstatus').textContent='Mapa geográfico no disponible — mostrando vista por mosaicos.'; drawTileMap(); return; }
+  document.getElementById('mapstatus').textContent='';
+  const w=620,h=640;
+  const proj=d3.geoMercator().fitSize([w,h],geo);
+  const path=d3.geoPath(proj);
+  const svg=d3.select('#map').html('').append('svg').attr('viewBox',`0 0 ${w} ${h}`);
+  svg.selectAll('path').data(geo.features).join('path')
+    .attr('d',path).attr('class','geopath')
+    .attr('data-dept',f=>matchDept(f.properties)||'')
+    .on('mousemove',(e,f)=>{const dn=matchDept(f.properties); const d=byName[dn];
+        tip.style.opacity=1; tip.style.left=(e.clientX+14)+'px'; tip.style.top=(e.clientY+14)+'px';
+        tip.innerHTML = d? `<b>${dn}</b><br>${metricLabel(mapMetric)}: ${fmt(score(d,mapMetric,2026))}<br>Posición: ${rank(d,mapMetric,2026)}°` : (dn||'—');})
+    .on('mouseout',()=>tip.style.opacity=0)
+    .on('click',(e,f)=>{const dn=matchDept(f.properties); if(dn)selectDept(dn);});
+  mapDrawn=true; recolorMap();
+}
+function recolorMap(){
+  d3.selectAll('#map path.geopath')
+    .attr('fill',function(){const dn=this.getAttribute('data-dept'); const d=byName[dn]; const v=d?score(d,mapMetric,2026):null; return v==null?'#dde5ee':color(v);})
+    .classed('sel',function(){return this.getAttribute('data-dept')===SELECTED;});
+}
+function drawTileMap(){
+  legendGradient();
+  const cont=document.getElementById('map');
+  const rows=[...DEPTS].sort((a,b)=>rank(a,mapMetric,2026)-rank(b,mapMetric,2026));
+  cont.innerHTML='<div class="tilemap">'+rows.map(d=>{const v=score(d,mapMetric,2026);
+     return `<div class="tile" data-d="${d.departamento}" style="background:${color(v)}99;outline:${d.departamento===SELECTED?'2px solid #16202e':'none'}">
+       <b>${d.departamento}</b><span class="ts">${fmt(v)}</span> <span style="font-size:11px">· ${rank(d,mapMetric,2026)}°</span></div>`;}).join('')+'</div>';
+  cont.querySelectorAll('.tile').forEach(t=>t.onclick=()=>selectDept(t.dataset.d));
+}
+document.getElementById('mapmetric').onchange=e=>{mapMetric=e.target.value; buildSideRank(); if(mapFailed)drawTileMap(); else recolorMap(); legendGradient();};
+
+/* side ranking in map panel */
+function buildSideRank(){
+  document.getElementById('ranktitle').textContent='Ranking · '+metricLabel(mapMetric);
+  const rows=[...DEPTS].sort((a,b)=>rank(a,mapMetric,2026)-rank(b,mapMetric,2026));
+  document.getElementById('siderank').innerHTML = rows.map(d=>{const v=score(d,mapMetric,2026);
+    return `<div class="rrow ${d.departamento===SELECTED?'sel':''}" data-d="${d.departamento}">
+      <span class="pos">${rank(d,mapMetric,2026)}</span>
+      <span class="nm">${d.departamento}<div class="rbar" style="width:${(v/sMax*100)}%;background:${color(v)}"></div></span>
+      <span class="sc">${fmt(v)}</span></div>`;}).join('');
+  document.querySelectorAll('#siderank .rrow').forEach(r=>r.onclick=()=>selectDept(r.dataset.d));
+}
+
+/* ---------- COMPARE ---------- */
+let picked=[DEPTS[0].departamento];
+function buildPick(){
+  document.getElementById('pick').innerHTML = DEPTS.map(d=>
+    `<label><input type="checkbox" value="${d.departamento}" ${picked.includes(d.departamento)?'checked':''}>${d.departamento}</label>`).join('');
+  document.querySelectorAll('#pick input').forEach(c=>c.onchange=()=>{
+    if(c.checked){ if(picked.length>=3){c.checked=false; return;} picked.push(c.value);}
+    else picked=picked.filter(x=>x!==c.value);
+    if(picked.length){SELECTED=picked[0];}
+    syncSelected(); drawRadar(); drawEvo();
+  });
+}
+const palette=['#1f6feb','#0e7c66','#d98324'];
+let radarChart, evoChart;
+function drawRadar(){
+  const labels=PILLARS.map((p,i)=>'P'+(i+1));
+  const ds = picked.map((dn,i)=>({label:dn, data:PILLARS.map(p=>byName[dn].pilares[p.key].p2026),
+     borderColor:palette[i], backgroundColor:palette[i]+'22', borderWidth:2, pointRadius:2}));
+  // national average
+  ds.push({label:'Promedio nacional', data:PILLARS.map(p=>d3.mean(DEPTS,d=>d.pilares[p.key].p2026)),
+     borderColor:'#8a93a0', borderDash:[5,4], backgroundColor:'transparent', borderWidth:1.5, pointRadius:0});
+  const cfg={type:'radar',data:{labels,datasets:ds},
+    options:{responsive:true,maintainAspectRatio:false,
+      scales:{r:{min:0,max:10,ticks:{stepSize:2,backdropColor:'transparent'},
+        pointLabels:{font:{size:11},callback:(l,i)=>'P'+(i+1)}}},
+      plugins:{legend:{position:'bottom',labels:{boxWidth:12,font:{size:11}}},
+        tooltip:{callbacks:{title:(it)=>PILLARS[it[0].dataIndex].nombre}}}}};
+  if(radarChart)radarChart.destroy(); radarChart=new Chart(document.getElementById('radar'),cfg);
+}
+function drawEvo(){
+  const dn=picked[0]||SELECTED; const d=byName[dn];
+  document.getElementById('evotitle').textContent='Evolución 2025 → 2026 · '+dn;
+  const labels=['IDC'].concat(PILLARS.map((p,i)=>'P'+(i+1)));
+  const v25=[d.idc_2025].concat(PILLARS.map(p=>d.pilares[p.key].p2025));
+  const v26=[d.idc_2026].concat(PILLARS.map(p=>d.pilares[p.key].p2026));
+  const cfg={type:'bar',data:{labels,datasets:[
+      {label:'2025',data:v25,backgroundColor:'#b9c6d6'},
+      {label:'2026',data:v26,backgroundColor:'#1f6feb'}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      scales:{y:{min:0,max:10}},
+      plugins:{legend:{position:'bottom'},
+        tooltip:{callbacks:{title:(it)=>{const i=it[0].dataIndex; return i===0?'IDC general':PILLARS[i-1].nombre;}}}}}};
+  if(evoChart)evoChart.destroy(); evoChart=new Chart(document.getElementById('evo'),cfg);
+}
+
+/* ---------- selection sync ---------- */
+function selectDept(dn){ if(!byName[dn])return; SELECTED=dn;
+  if(!picked.includes(dn)){ picked.unshift(dn); if(picked.length>3)picked=picked.slice(0,3); }
+  else { picked=[dn].concat(picked.filter(x=>x!==dn)); }
+  syncSelected(); buildPick(); drawRadar(); drawEvo();
+}
+function syncSelected(){
+  document.querySelectorAll('#tbl tbody tr').forEach(tr=>tr.classList.toggle('sel',tr.dataset.d===SELECTED));
+  document.querySelectorAll('#siderank .rrow').forEach(r=>r.classList.toggle('sel',r.dataset.d===SELECTED));
+  if(mapDrawn&&!mapFailed)recolorMap(); if(mapFailed)drawTileMap();
+}
+
+/* ---------- init ---------- */
+buildKPIs(); buildTable(); buildSideRank(); buildPick(); drawRadar(); drawEvo();
+</script>
+</body>
+</html>
