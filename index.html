@@ -113,6 +113,25 @@
     .panel{display:none !important}#printArea{display:block !important}
     .card{box-shadow:none;border:none}body{background:#fff}
   }
+
+  .toolbar .btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .searchbox{position:relative}
+  .searchbox input[type=search]{min-width:240px}
+  .searchbox .results{position:absolute;top:112%;left:0;right:0;min-width:300px;background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);max-height:340px;overflow:auto;z-index:70;display:none}
+  .searchbox .results.show{display:block}
+  .sres{display:flex;align-items:center;gap:8px;padding:8px 11px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--line)}
+  .sres:last-child{border-bottom:none}.sres:hover{background:var(--soft)}
+  .sres .t{font-size:10px;font-weight:700;color:#fff;padding:1px 6px;border-radius:5px;white-space:nowrap}
+  .indexpanel{display:none}
+  .indexpanel.show{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px;margin-bottom:16px}
+  .ixitem{display:flex;gap:10px;align-items:flex-start;padding:10px;border-radius:10px;cursor:pointer;border:1px solid var(--line)}
+  .ixitem:hover{background:var(--soft)}
+  .ixdot{width:12px;height:12px;border-radius:3px;margin-top:3px;flex:none}
+  .ixitem .nm{font-weight:700;font-size:13.5px}.ixitem .ds{font-size:12px;color:var(--muted)}
+  h3.sec{border-left:4px solid var(--accent);padding-left:10px}
+  .kpi{border-left:5px solid var(--accent)}
+  .brandbar{background:linear-gradient(180deg,rgba(31,77,160,.05),transparent)}
+  .card{border-top:3px solid transparent}
 </style>
 </head>
 <body>
@@ -125,6 +144,8 @@
       <div class="tag">Edición 2026 · 32 departamentos + Bogotá D.C. · Consejo Privado de Competitividad &amp; Universidad del Rosario</div></div>
     </div>
     <div class="toolbar">
+      <div class="searchbox"><input id="globalq" type="search" placeholder="Buscar departamentos, pilares, prácticas…" autocomplete="off"><div class="results" id="globalRes"></div></div>
+      <button class="btn primary" id="btnIndex">Índice ▾</button>
       <button class="btn" id="btnTheme">Modo oscuro</button>
       <button class="btn" id="btnCsv">Descargar CSV</button>
       <button class="btn" id="btnShare">Compartir enlace</button>
@@ -145,6 +166,8 @@
     <div class="tab" data-tab="ficha">Ficha</div>
     <div class="tab" data-tab="metodologia">Metodología</div>
   </div>
+
+  <div class="indexpanel" id="indexPanel"></div>
 
   <!-- RESUMEN -->
   <section class="panel active" data-panel="resumen">
@@ -405,7 +428,7 @@ const _down=[...DEPTS].sort((a,b)=>a.cambio_pos-b.cambio_pos)[0];
     {lab:'Mayor ascenso',val:_up.departamento,det:_up.cambio_pos>0?'▲ '+_up.cambio_pos+' posiciones':'sin cambio'},
     {lab:'Mayor descenso',val:_down.departamento,det:_down.cambio_pos<0?'▼ '+Math.abs(_down.cambio_pos)+' posiciones':'sin cambio'},
     {lab:'Brecha máx–mín',val:fmt(gap)+' pts',det:DEPTS[0].departamento+' vs '+DEPTS[DEPTS.length-1].departamento}];
-  document.getElementById('kpis').innerHTML=cards.map(c=>`<div class="kpi"><div class="lab">${c.lab}</div><div class="val">${c.val}</div><div class="det">${c.det}</div></div>`).join('');})();
+  const KPICOL=['#1b4da0','#da0921','#e0a800','#2e7d6b'];document.getElementById('kpis').innerHTML=cards.map((c,i)=>`<div class="kpi" style="border-left-color:${KPICOL[i%4]}"><div class="lab" style="color:${KPICOL[i%4]}">${c.lab}</div><div class="val">${c.val}</div><div class="det">${c.det}</div></div>`).join('');})();
 
 /* ---- tabs ---- */
 function setTab(name){curTab=name;
@@ -421,6 +444,26 @@ function setTab(name){curTab=name;
   if(name==='ficha')buildFicha();
   updateHash();}
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>setTab(t.dataset.tab));
+const SECTIONS=[{id:'resumen',name:'Resumen',desc:'Panorama ejecutivo nacional',c:'#1b4da0'},{id:'ranking',name:'Ranking',desc:'Tabla completa ordenable',c:'#da0921'},{id:'mapa',name:'Mapa',desc:'Coroplético por departamento',c:'#e0a800'},{id:'comparar',name:'Comparar',desc:'Hasta 5 departamentos',c:'#2e7d6b'},{id:'dispersion',name:'Dispersión',desc:'Relación entre dos pilares',c:'#6a3d9a'},{id:'regiones',name:'Regiones',desc:'Promedios por región',c:'#1b4da0'},{id:'graficas',name:'Gráficas',desc:'Constructor, heatmap, histograma, trayectorias',c:'#da0921'},{id:'practicas',name:'Buenas prácticas',desc:'65 iniciativas filtrables',c:'#e0a800'},{id:'ficha',name:'Ficha',desc:'Perfil completo de un departamento',c:'#2e7d6b'},{id:'metodologia',name:'Metodología',desc:'Qué es el IDC y fuentes',c:'#6a3d9a'}];
+const ixp=document.getElementById('indexPanel');
+ixp.innerHTML=SECTIONS.map(s=>`<div class="ixitem" data-id="${s.id}"><span class="ixdot" style="background:${s.c}"></span><div><div class="nm">${s.name}</div><div class="ds">${s.desc}</div></div></div>`).join('');
+ixp.querySelectorAll('.ixitem').forEach(it=>it.onclick=()=>{setTab(it.dataset.id);ixp.classList.remove('show');});
+document.getElementById('btnIndex').onclick=()=>ixp.classList.toggle('show');
+const SNORM=s=>(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+const SIDX=[];DEPTS.forEach(d=>SIDX.push({t:'Departamento',c:'#1b4da0',label:d.departamento,kind:'dept',key:d.departamento}));
+PILLARS.forEach(p=>SIDX.push({t:'Pilar',c:'#e0a800',label:p.nombre,kind:'pillar',key:p.key}));
+BP.forEach(b=>SIDX.push({t:'Práctica',c:'#2e7d6b',label:b.titulo,kind:'bp',key:b.titulo,dept:b.departamento}));
+const gq=document.getElementById('globalq'),gres=document.getElementById('globalRes');
+function runSearch(){const q=SNORM(gq.value.trim());if(!q){gres.classList.remove('show');return;}
+  const hits=SIDX.filter(x=>SNORM(x.label).includes(q)).slice(0,12);
+  gres.innerHTML=hits.length?hits.map((x,i)=>`<div class="sres" data-i="${i}"><span class="t" style="background:${x.c}">${x.t}</span><span>${x.label}${x.dept?` · <span style="color:var(--muted)">${x.dept}</span>`:''}</span></div>`).join(''):'<div class="sres"><span style="color:var(--muted)">Sin resultados</span></div>';
+  gres.classList.add('show');
+  gres.querySelectorAll('.sres[data-i]').forEach(el=>el.onmousedown=e=>{e.preventDefault();pickSearch(hits[+el.dataset.i]);});}
+function pickSearch(x){gres.classList.remove('show');gq.value='';
+  if(x.kind==='dept'){selectDept(x.key);setTab('ficha');}
+  else if(x.kind==='pillar'){mapMetric=x.key;document.getElementById('mapmetric').value=x.key;setTab('mapa');}
+  else{document.getElementById('bpPilar').value='';document.getElementById('bpDept').value='';document.getElementById('bpq').value=x.key;setTab('practicas');}}
+gq.oninput=runSearch;gq.onfocus=runSearch;gq.onblur=()=>setTimeout(()=>gres.classList.remove('show'),150);
 
 /* ---- selectors ---- */
 const metricOptsHTML=metricOpts.map(o=>`<option value="${o.key}">${o.nombre}</option>`).join('');
