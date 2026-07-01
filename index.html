@@ -439,7 +439,10 @@
   <!-- RESUMEN -->
   <section class="panel active" data-panel="resumen">
     <div class="card">
-      <span class="fx-eyebrow">Agrupamiento · k-means sobre los 13 pilares</span>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+        <span class="fx-eyebrow">Agrupamiento · k-means sobre los 13 pilares</span>
+        <button class="btn" id="btnZMapPng">Descargar mapa</button>
+      </div>
       <h3 class="sec" style="margin-top:10px">Cómo se agrupan los territorios</h3>
       <div class="note" style="margin:-4px 0 14px">Cada departamento se asigna a uno de <b>4 grupos</b> según la similitud de su perfil completo de competitividad. Toca un grupo para resaltarlo en el mapa; toca un territorio para abrir su ficha.</div>
       <div class="zmap">
@@ -477,7 +480,7 @@
     <div class="card">
       <div class="controls">
         <label class="ctl">Colorear por <select id="mapmetric"></select></label>
-        <button class="btn" id="btnMapPng">Descargar SVG</button>
+        <button class="btn" id="btnMapPng">Descargar mapa</button>
         <span class="note" id="mapstatus" aria-live="polite"></span>
       </div>
       <div class="maplayout">
@@ -779,17 +782,130 @@ function exportCanvas(id,name,titleOverride,subtitleOverride){
   g.fillText('Fuente: compite.com.co · Exportado el '+fecha,padX,headH+ch+34*S);
   const a=document.createElement('a');a.href=out.toDataURL('image/png');a.download=name+'.png';a.click();
 }
+/* ---- exportar mapas (departamental y de clusters) a PNG con título, leyenda y derechos de autor ---- */
+function rasterizeSvg(svgEl,scale){
+  return new Promise((resolve,reject)=>{
+    const vb=(svgEl.getAttribute('viewBox')||'0 0 620 640').split(/\s+/).map(Number);
+    const w=vb[2]||620,h=vb[3]||640;
+    const clone=svgEl.cloneNode(true);
+    clone.setAttribute('width',w);clone.setAttribute('height',h);
+    clone.setAttribute('xmlns','http://www.w3.org/2000/svg');
+    const liveNodes=svgEl.querySelectorAll('path'),cloneNodes=clone.querySelectorAll('path');
+    liveNodes.forEach((ln,i)=>{const cn=cloneNodes[i];if(!cn)return;const cs=getComputedStyle(ln);
+      cn.setAttribute('stroke',cs.stroke||'#ffffff');cn.setAttribute('stroke-width',cs.strokeWidth||'0.6');
+      if(!cn.getAttribute('fill'))cn.setAttribute('fill',cs.fill||'#c9d5e6');
+      const op=ln.style.opacity;if(op)cn.setAttribute('opacity',op);});
+    const xml=new XMLSerializer().serializeToString(clone);
+    const svg64='data:image/svg+xml;base64,'+btoa(unescape(encodeURIComponent(xml)));
+    const img=new Image();
+    img.onload=()=>{const cv=document.createElement('canvas');cv.width=Math.round(w*scale);cv.height=Math.round(h*scale);
+      const cx=cv.getContext('2d');cx.setTransform(scale,0,0,scale,0,0);cx.fillStyle='#fff';cx.fillRect(0,0,w,h);cx.drawImage(img,0,0,w,h);
+      resolve({canvas:cv,w,h});};
+    img.onerror=e=>reject(e||new Error('rasterize failed'));
+    img.src=svg64;
+  });
+}
+function tileFallbackCanvas(cont,scale){
+  const tiles=[...cont.querySelectorAll('.tile')];if(!tiles.length)return null;
+  const cols=4,gap=8,tw=150,th=56,rows=Math.ceil(tiles.length/cols);
+  const w=cols*tw+(cols-1)*gap,h=rows*th+(rows-1)*gap;
+  const cv=document.createElement('canvas');cv.width=Math.round(w*scale);cv.height=Math.round(h*scale);
+  const cx=cv.getContext('2d');cx.setTransform(scale,0,0,scale,0,0);cx.fillStyle='#fff';cx.fillRect(0,0,w,h);
+  tiles.forEach((t,i)=>{const r=Math.floor(i/cols),c=i%cols,x=c*(tw+gap),y=r*(th+gap);
+    cx.fillStyle=getComputedStyle(t).backgroundColor||'#c9d5e6';
+    if(cx.roundRect){cx.beginPath();cx.roundRect(x,y,tw,th,10);cx.fill();}else cx.fillRect(x,y,tw,th);
+    cx.fillStyle='#fff';cx.font='600 12px Barlow, sans-serif';
+    cx.fillText((t.querySelector('b')?t.querySelector('b').textContent:(t.dataset.d||'')),x+9,y+18);});
+  return {canvas:cv,w,h};
+}
+async function exportMapPng(kind){
+  const cont=document.querySelector(kind==='cluster'?'#zMap':'#map');
+  if(!cont){toast('Mapa no disponible');return;}
+  const svg=cont.querySelector('svg');const S=2;
+  let src=null;try{src=svg?await rasterizeSvg(svg,S):tileFallbackCanvas(cont,S);}catch(e){src=null;}
+  if(!src){toast('No se pudo generar la imagen del mapa');return;}
+  const isCat=kind==='cluster';
+  const title=isCat?'Agrupamiento de departamentos (k-means)':('Mapa departamental · '+metricLabel(mapMetric)+' (2026)');
+  const subtitle=isCat?'4 grupos según similitud del perfil de 13 pilares':'Color por puntaje 0–10';
+  const padX=26*S,padTop=18*S,rule=6*S,ROWH=58*S;
+  const mapW=src.w*S,mapH=src.h*S;
+  const legendColW=isCat?260*S:0,legendGap=isCat?22*S:0;
+  const headH=rule+padTop+26*S+20*S+(subtitle?18*S:0);
+  const footH=50*S;
+  const catLegendH=isCat?computeClusters().groups.length*ROWH:0;
+  const gradLegendH=isCat?0:56*S;
+  const W=padX*2+mapW+(isCat?legendGap+legendColW:0);
+  const bodyH=Math.max(mapH,catLegendH);
+  const H=headH+bodyH+gradLegendH+footH;
+  const out=document.createElement('canvas');out.width=W;out.height=H;
+  const g=out.getContext('2d');
+  g.fillStyle='#ffffff';g.fillRect(0,0,W,H);
+  const grd=g.createLinearGradient(0,0,W,0);
+  grd.addColorStop(0,'#02285e');grd.addColorStop(.4,'#0046b1');grd.addColorStop(.72,'#ff4101');grd.addColorStop(1,'#fddd00');
+  g.fillStyle=grd;g.fillRect(0,0,W,rule);
+  g.textBaseline='top';
+  const usableW=W-padX*2;
+  const fitFont=(txt,base,prefix,fam)=>{let fs=base;const set=s=>g.font=`${prefix}${s}px ${fam}`;set(fs);while(g.measureText(txt).width>usableW&&fs>8*S){fs-=S;set(fs);}return fs;};
+  g.fillStyle='#0046b1';fitFont('ÍNDICE DEPARTAMENTAL DE COMPETITIVIDAD · IDC 2026',11*S,'600 ','Barlow, system-ui, sans-serif');
+  g.fillText('ÍNDICE DEPARTAMENTAL DE COMPETITIVIDAD · IDC 2026',padX,padTop+rule);
+  g.fillStyle='#02285e';fitFont(title,22*S,'800 ','"Barlow Semi Condensed", Barlow, sans-serif');
+  g.fillText(title,padX,padTop+rule+16*S);
+  if(subtitle){g.fillStyle='#5C6A82';fitFont(subtitle,12.5*S,'','Barlow, sans-serif');g.fillText(subtitle,padX,padTop+rule+16*S+26*S);}
+  g.drawImage(src.canvas,padX,headH,mapW,mapH);
+  let legendBottom=headH+mapH;
+  if(isCat){
+    const lx=padX+mapW+legendGap;let cy=headH;
+    const c=computeClusters(),legW=legendColW-15*S-8*S;
+    c.groups.forEach(gr=>{const sz=15*S;
+      g.fillStyle=CLU_COLORS[gr.ci];
+      if(g.roundRect){g.beginPath();g.roundRect(lx,cy,sz,sz,4*S);g.fill();}else g.fillRect(lx,cy,sz,sz);
+      g.fillStyle='#02285e';g.font=`700 ${13*S}px Barlow, sans-serif`;
+      g.fillText(CLU_NAMES[gr.ci],lx+sz+8*S,cy-1*S);
+      g.fillStyle='#5C6A82';g.font=`${10.5*S}px Barlow, sans-serif`;
+      let l1=`IDC medio ${fmt(gr.meanIdc)} · ${gr.depts.length} territorios`;
+      while(g.measureText(l1).width>legW&&l1.length>10)l1=l1.slice(0,-4)+'…';
+      g.fillText(l1,lx+sz+8*S,cy+15*S);
+      let l2=`Destaca en ${gr.strength}`;
+      while(g.measureText(l2).width>legW&&l2.length>10)l2=l2.slice(0,-4)+'…';
+      g.fillText(l2,lx+sz+8*S,cy+29*S);
+      cy+=ROWH;});
+    legendBottom=Math.max(legendBottom,cy);
+  }else{
+    const ly=headH+mapH+16*S,barW=mapW,barH=14*S,steps=12;
+    const bg=g.createLinearGradient(padX,0,padX+barW,0);
+    for(let i=0;i<=steps;i++)bg.addColorStop(i/steps,color(sMin+(sMax-sMin)*i/steps));
+    g.fillStyle=bg;g.fillRect(padX,ly,barW,barH);
+    g.strokeStyle='#d4dce8';g.lineWidth=S;g.strokeRect(padX,ly,barW,barH);
+    g.fillStyle='#5C6A82';g.font=`${11*S}px Barlow, sans-serif`;
+    g.textAlign='left';g.fillText(fmt(sMin),padX,ly+barH+6*S);
+    g.textAlign='right';g.fillText(fmt(sMax),padX+barW,ly+barH+6*S);
+    g.textAlign='left';
+    legendBottom=ly+barH+22*S;
+  }
+  const footY=Math.max(headH+bodyH+gradLegendH,legendBottom+10*S);
+  let fecha;try{fecha=new Date().toLocaleDateString('es-CO',{year:'numeric',month:'long',day:'numeric'});}catch(e){fecha=new Date().toLocaleDateString();}
+  g.fillStyle='#e2eaf4';g.fillRect(padX,footY,W-padX*2,Math.max(1,S));
+  const copy='© 2026 Consejo Privado de Competitividad y Universidad del Rosario · Todos los derechos reservados';
+  g.fillStyle='#5C6A82';fitFont(copy,11*S,'','Barlow, sans-serif');
+  g.fillText(copy,padX,footY+8*S);
+  g.fillStyle='#8895ae';g.font=`${10.5*S}px Barlow, sans-serif`;
+  g.fillText('Fuente: compite.com.co · Exportado el '+fecha,padX,footY+24*S);
+  const a=document.createElement('a');a.href=out.toDataURL('image/png');a.download=(kind==='cluster'?'mapa_clusters_idc':'mapa_idc')+'.png';a.click();
+}
 document.getElementById('btnCmpBarPng').onclick=()=>exportCanvas('cmpBar','comparacion',null,picked.join(' · '));
 document.getElementById('btnScPng').onclick=()=>exportCanvas('scatter','dispersion',null,metricLabel(document.getElementById('scX').value||PILLARS[0].key)+' vs '+metricLabel(document.getElementById('scY').value||PILLARS[1].key));
-document.getElementById('btnGbPng').onclick=()=>exportCanvas('gbCanvas','grafica');
-document.getElementById('btnPrPng').onclick=()=>exportCanvas('prCanvas','preset');
-document.getElementById('btnHiPng').onclick=()=>exportCanvas('hiCanvas','histograma');
-document.getElementById('btnEvPng').onclick=()=>exportCanvas('evCanvas','evolucion');
-document.getElementById('btnTrPng').onclick=()=>exportCanvas('trCanvas','trayectoria');
+function gbCurrentTitle(){const mode=document.getElementById('gbMode').value||'deptos',year=document.getElementById('gbYear').value||'2026';
+  if(mode==='scatter'){const kx=metricLabel(document.getElementById('gbX').value||PILLARS[0].key),ky=metricLabel(document.getElementById('gbY').value||PILLARS[1].key);return `Dispersión · ${kx} vs. ${ky} (${year})`;}
+  if(mode==='pilares'){const dn=document.getElementById('gbDept').value||DEPTS[0].departamento;return `Perfil de pilares · ${dn} (${year})`;}
+  return `Comparación de departamentos · ${metricLabel(document.getElementById('gbMetric').value||'idc')} (${year})`;}
+document.getElementById('btnGbPng').onclick=()=>exportCanvas('gbCanvas','grafica',gbCurrentTitle());
+document.getElementById('btnPrPng').onclick=()=>exportCanvas('prCanvas','preset',(prChart&&prChart.data.datasets[0].label)||'Presets rápidos');
+document.getElementById('btnHiPng').onclick=()=>exportCanvas('hiCanvas','histograma',`Histograma · ${metricLabel(document.getElementById('hiPillar').value||'idc')} (${document.getElementById('hiYear').value||'2026'})`);
+document.getElementById('btnEvPng').onclick=()=>exportCanvas('evCanvas','evolucion',`Evolución 2025→2026 · ${metricLabel(document.getElementById('evMetric').value||'idc')}`,evPicked.join(' · '));
+document.getElementById('btnTrPng').onclick=()=>exportCanvas('trCanvas','trayectoria',`Trayectoria del ranking 2022–2026 · ${metricLabel(document.getElementById('trMetric').value||'idc')}`,trPicked.length>8?trPicked.length+' departamentos':trPicked.join(' · '));
 document.getElementById('btnFichaPdf').onclick=()=>generateReport(fichaReportSet.length?fichaReportSet.slice():[SELECTED]);
-document.getElementById('btnMapPng').onclick=()=>{const s=document.querySelector('#map svg');if(!s){toast('Mapa no disponible');return;}
-  const xml=new XMLSerializer().serializeToString(s);const blob=new Blob([xml],{type:'image/svg+xml'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='mapa_idc.svg';a.click();};
+document.getElementById('btnMapPng').onclick=()=>exportMapPng('dept');
+document.getElementById('btnZMapPng').onclick=()=>exportMapPng('cluster');
 
 /* ---- KPIs ---- */
 const _up=[...DEPTS].sort((a,b)=>b.cambio_pos-a.cambio_pos)[0];
