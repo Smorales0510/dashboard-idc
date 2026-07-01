@@ -262,6 +262,107 @@
   .ixdot{width:11px;height:11px;border-radius:3px;margin-top:4px;flex:none}
   .ixitem .nm{font-weight:600;font-size:13.5px}.ixitem .ds{font-size:11.5px;color:var(--muted);line-height:1.3}
 
+  /* ================= FICHA · PERFIL DEPARTAMENTAL (premium) ================= */
+  .fx{--gap:16px}
+  .fx-eyebrow{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);background:var(--soft);border:1px solid var(--line);border-radius:999px;padding:4px 11px}
+  /* hero del perfil: nombre gigante + score */
+  .fx-hero{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;padding:6px 0 20px;border-bottom:1px solid var(--line);margin-bottom:22px}
+  .fx-hero .name{font-family:var(--serif);font-weight:800;font-size:clamp(30px,5.2vw,52px);line-height:.98;letter-spacing:-.01em;color:var(--ink);margin:12px 0 8px}
+  .fx-hero .sub{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+  .fx-hero .cap{color:var(--ink);font-weight:600}
+  /* medallón IDC: doble bisel */
+  .fx-score{flex:none;text-align:center;padding:6px;border-radius:26px;background:var(--soft);border:1px solid var(--line)}
+  .fx-score .core{border-radius:20px;padding:16px 26px;color:#fff;box-shadow:inset 0 1px 1px rgba(255,255,255,.18)}
+  .fx-score .num{font-family:var(--serif);font-weight:800;font-size:40px;line-height:1;font-variant-numeric:tabular-nums}
+  .fx-score .rk{font-family:var(--mono);font-size:11px;letter-spacing:.06em;opacity:.92;margin-top:4px}
+  .fx-delta{font-family:var(--mono);font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px}
+  .fx-delta.up{color:var(--up);background:rgba(0,70,177,.10)}
+  .fx-delta.down{color:var(--down);background:rgba(253,2,0,.10)}
+  .fx-delta.eq{color:var(--muted);background:var(--soft)}
+  /* datos destacados: bento de stats con doble bisel */
+  .fx-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:var(--gap);margin-bottom:22px}
+  .fx-stat{background:var(--soft);border:1px solid var(--line);border-radius:18px;padding:5px}
+  .fx-stat .in{background:var(--card);border-radius:14px;padding:15px 16px;height:100%;box-shadow:inset 0 1px 0 rgba(255,255,255,.6)}
+  [data-theme=dark] .fx-stat .in{box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+  .fx-stat .k{font-family:var(--mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+  .fx-stat .val{font-family:var(--serif);font-weight:800;font-size:23px;line-height:1.05;color:var(--ink);margin-top:8px;font-variant-numeric:tabular-nums}
+  .fx-stat .u{font-size:11px;color:var(--muted);margin-top:3px}
+  /* layout 2 columnas: trayectoria + lectura */
+  .fx-2col{display:grid;grid-template-columns:1.5fr 1fr;gap:var(--gap);margin-bottom:22px}
+  @media(max-width:820px){.fx-2col{grid-template-columns:1fr}}
+  .fx-card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px 18px 14px;box-shadow:var(--shadow)}
+  .fx-card h4{margin:0 0 4px;font-family:var(--serif);font-weight:700;font-size:15px;color:var(--ink)}
+  .fx-card .cap{font-size:11.5px;color:var(--muted);margin-bottom:10px}
+  .fx-trajbox{position:relative;height:220px}
+  .fx-read{font-size:13px;line-height:1.55;color:var(--ink)}
+  .fx-read b{color:var(--ink)}
+  /* filas de pilar premium */
+  .fx-pil{border:1px solid var(--line);border-radius:14px;margin-bottom:8px;overflow:hidden;background:var(--card)}
+  .fx-pil .hd{display:grid;grid-template-columns:1.5fr 2fr auto;gap:14px;align-items:center;padding:12px 15px;cursor:pointer;transition:background .18s cubic-bezier(.32,.72,0,1)}
+  .fx-pil .hd:hover{background:var(--soft)}
+  .fx-pil .pn{font-weight:600;font-size:13.5px;color:var(--ink);display:flex;align-items:center;gap:8px}
+  .fx-pil .caret{color:var(--muted);transition:transform .2s cubic-bezier(.32,.72,0,1);display:inline-block}
+  .fx-pil.open .caret{transform:rotate(90deg)}
+  .fx-pil .track{height:8px;border-radius:999px;background:var(--soft);overflow:hidden}
+  .fx-pil .fill{height:100%;border-radius:999px;transition:width .7s cubic-bezier(.32,.72,0,1)}
+  .fx-pil .rt{text-align:right;font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .fx-pil .rt .sc{font-weight:700;color:var(--ink)}
+  .fx-pil .best{font-size:10.5px;color:var(--muted);margin-top:2px}
+  .fx-tagS{color:var(--accent);font-weight:600;font-size:11px}
+  .fx-tagW{color:var(--down);font-weight:600;font-size:11px}
+  .fx-pil .body{max-height:0;overflow:hidden;transition:max-height .35s cubic-bezier(.32,.72,0,1);background:var(--soft)}
+  .fx-pil.open .body{max-height:640px}
+  .fx-pil .body .in{padding:6px 15px 12px}
+  .fx-ind{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-top:1px solid var(--line);font-size:12.5px}
+  .fx-ind:first-child{border-top:none}
+  .fx-ind .iv{font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+  /* reveal escalonado */
+  @media(prefers-reduced-motion:no-preference){
+    .fx-reveal{opacity:0;transform:translateY(14px);animation:fxUp .6s cubic-bezier(.32,.72,0,1) forwards}
+    @keyframes fxUp{to{opacity:1;transform:none}}
+  }
+
+  /* ================= INTRO · apertura del tablero ================= */
+  .intro{padding:26px 0 22px;border-bottom:1px solid var(--line);margin-bottom:22px}
+  .intro .lead-txt{max-width:760px}
+  .intro h2{font-family:var(--serif);font-weight:800;font-size:clamp(30px,5vw,50px);line-height:1;letter-spacing:-.01em;color:var(--ink);margin:12px 0 14px}
+  .intro h2 em{font-style:normal;color:var(--accent2)}
+  .intro p{font-size:14.5px;line-height:1.6;color:var(--muted);margin:0 0 12px}
+  .intro p b{color:var(--ink)}
+  .intro-metrics{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0 6px}
+  .intro-metrics .m{background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:10px 16px}
+  .intro-metrics .m .n{font-family:var(--serif);font-weight:800;font-size:24px;color:var(--ink);line-height:1;font-variant-numeric:tabular-nums}
+  .intro-metrics .m .l{font-size:11px;color:var(--muted);margin-top:3px}
+  /* estructura: 4 factores -> pilares */
+  .struct{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:20px}
+  @media(max-width:900px){.struct{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:520px){.struct{grid-template-columns:1fr}}
+  .fac{background:var(--soft);border:1px solid var(--line);border-radius:18px;padding:5px}
+  .fac .in{background:var(--card);border-radius:14px;padding:14px;height:100%;box-shadow:inset 0 1px 0 rgba(255,255,255,.6)}
+  [data-theme=dark] .fac .in{box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+  .fac .fh{display:flex;align-items:center;gap:9px;margin-bottom:10px}
+  .fac .dot{width:12px;height:12px;border-radius:4px;flex:none}
+  .fac .ft{font-weight:700;font-size:13px;color:var(--ink);line-height:1.15}
+  .fac ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}
+  .fac li{font-size:11.5px;color:var(--muted);display:flex;gap:7px;align-items:baseline}
+  .fac li::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--line);flex:none;transform:translateY(-1px)}
+  .intro-note{margin-top:16px;font-size:12px;color:var(--muted);background:var(--soft);border-left:3px solid var(--accent);border-radius:0 10px 10px 0;padding:11px 14px;line-height:1.5}
+  /* mapa en el Resumen (primera intersección de la Z) */
+  .zmap{display:grid;grid-template-columns:1.35fr 1fr;gap:16px;margin-bottom:22px}
+  @media(max-width:900px){.zmap{grid-template-columns:1fr}}
+  .zmap .mapwrap{position:relative;min-height:340px}
+  .zmap .mapwrap svg{width:100%;height:auto;display:block}
+  /* clusters (k-means) */
+  .clu-legend{display:flex;flex-direction:column;gap:8px}
+  .clu-item{display:flex;gap:11px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card);cursor:pointer;transition:background .15s,border-color .15s}
+  .clu-item:hover{background:var(--soft);border-color:var(--accent)}
+  .clu-item.mut{opacity:.42}
+  .clu-sw{width:14px;height:14px;border-radius:5px;margin-top:2px;flex:none}
+  .clu-item .nm{font-weight:700;font-size:13px;color:var(--ink)}
+  .clu-item .ds{font-size:11px;color:var(--muted);line-height:1.35;margin-top:2px}
+  .clu-item .cnt{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:auto;white-space:nowrap}
+  .geopath.cluhi{stroke:var(--ink);stroke-width:1.2}
+
   @media print{
     body{background:#fff;background-image:none}
     .brandbar .toolbar,.tabs,.kpis,.controls,footer,.modebar,.hero{display:none !important}
@@ -303,12 +404,21 @@
     </div>
   </div>
 
-  <section class="hero">
-    <div class="eyebrow">Indice Departamental de Competitividad &middot; Edicion 2026</div>
-    <h2>El relieve competitivo de <em>Colombia</em></h2>
-    <p class="thesis">Cada barra es un departamento, de mayor a menor competitividad. La altura es su IDC 2026 sobre 10. De <b id="hiHigh">&mdash;</b> en la cima a <b id="hiLow">&mdash;</b> en la base, una brecha de <b id="hiGap">&mdash;</b> puntos separa a los 33 territorios. Pasa el cursor sobre una barra; haz clic para abrir su ficha.</p>
-    <div class="cordillera" id="cordillera"></div>
-    <div class="ridgeaxis"><span>1 &middot; <b id="hiHighN">&mdash;</b></span><span>Posicion en el IDC 2026 &rarr;</span><span><b id="hiLowN">&mdash;</b> &middot; 33</span></div>
+  <section class="hero intro">
+    <div class="lead-txt fx-reveal">
+      <span class="fx-eyebrow">Índice Departamental de Competitividad · Edición 2026</span>
+      <h2>La competitividad de <em>Colombia</em>, medida y comparada</h2>
+      <p>El <b>Índice Departamental de Competitividad (IDC)</b> es el resultado de la alianza entre el <b>Consejo Privado de Competitividad</b> y la <b>Universidad del Rosario</b>, con 13 años de trayectoria. Ofrece a los actores regionales una medición objetiva del desempeño competitivo de los <b>32 departamentos y Bogotá D.C.</b>, construida únicamente con indicadores duros de fuentes oficiales.</p>
+      <p>Cada indicador se normaliza a una escala <b>0–10</b> mediante una transformación máx.–mín., y el puntaje general surge de promediar sucesivamente indicadores → subpilares → pilares. El resultado captura tanto el orden como las <b>brechas relativas</b> entre territorios.</p>
+    </div>
+    <div class="intro-metrics fx-reveal">
+      <div class="m"><div class="n">93</div><div class="l">Indicadores</div></div>
+      <div class="m"><div class="n">13</div><div class="l">Pilares</div></div>
+      <div class="m"><div class="n">4</div><div class="l">Factores</div></div>
+      <div class="m"><div class="n">33</div><div class="l">Territorios</div></div>
+    </div>
+    <div class="struct" id="introStruct"></div>
+    <div class="intro-note fx-reveal"><b>Nota metodológica.</b> El IDC 2026 incorpora la reestructuración del subpilar de investigación y las nuevas proyecciones demográficas del DANE (2025). Por ello, sus resultados <b>no son comparables</b> con versiones previas; la única comparación válida es la recalculada para 2019–2025 que incluye esta publicación. Fuente: CPC y SCORE–Universidad del Rosario.</div>
   </section>
 
   <div class="kpis" id="kpis"></div>
@@ -328,6 +438,15 @@
 
   <!-- RESUMEN -->
   <section class="panel active" data-panel="resumen">
+    <div class="card">
+      <span class="fx-eyebrow">Agrupamiento · k-means sobre los 13 pilares</span>
+      <h3 class="sec" style="margin-top:10px">Cómo se agrupan los territorios</h3>
+      <div class="note" style="margin:-4px 0 14px">Cada departamento se asigna a uno de <b>4 grupos</b> según la similitud de su perfil completo de competitividad. Toca un grupo para resaltarlo en el mapa; toca un territorio para abrir su ficha.</div>
+      <div class="zmap">
+        <div class="mapwrap" id="zMap"><div class="note">Cargando mapa…</div></div>
+        <div class="clu-legend" id="zLegend"></div>
+      </div>
+    </div>
     <div class="card"><h3 class="sec">Resumen ejecutivo nacional</h3>
       <div class="lead" id="resLead"></div>
       <div class="insight" id="resInsights"></div>
@@ -532,6 +651,7 @@
   <footer>
     Una iniciativa del Consejo Privado de Competitividad y la Universidad del Rosario. Datos: archivos de cálculo del IDC. Puntajes 0–10; el IDC general es el promedio de los 13 pilares.
     Tablero con fines de visualización — verifica las cifras contra el informe oficial antes de publicar. Fuente: <a href="https://compite.com.co/indice-departamental-de-competitividad-idc/" target="_blank" rel="noopener">compite.com.co</a>.
+    <div style="margin-top:8px;font-size:11px;color:var(--muted)">© 2026 Consejo Privado de Competitividad y Universidad del Rosario. Todos los derechos reservados.</div>
   </footer>
 </div>
 <div class="scrollprog" id="scrollProg" aria-hidden="true"></div>
@@ -605,9 +725,62 @@ document.getElementById('btnCsv').onclick=downloadCSV;
 function updateHash(){history.replaceState(null,'','#tab='+curTab+'&dept='+encodeURIComponent(SELECTED));}
 document.getElementById('btnShare').onclick=()=>{updateHash();
   (navigator.clipboard?navigator.clipboard.writeText(location.href):Promise.reject()).then(()=>toast('Enlace copiado')).catch(()=>toast('Copia el enlace de la barra'));};
-function exportCanvas(id,name){const c=document.getElementById(id);if(!c)return;const a=document.createElement('a');a.href=c.toDataURL('image/png');a.download=name+'.png';a.click();}
-document.getElementById('btnCmpBarPng').onclick=()=>exportCanvas('cmpBar','comparacion');
-document.getElementById('btnScPng').onclick=()=>exportCanvas('scatter','dispersion');
+function exportCanvas(id,name,titleOverride,subtitleOverride){
+  const c=document.getElementById(id);if(!c)return;
+  const inst=(window.Chart&&Chart.getChart)?Chart.getChart(c):null;
+  let _anim=null,_lg=null;
+  if(inst){try{
+    _anim=inst.options.animation;inst.options.animation=false;
+    const lg=inst.options.plugins&&inst.options.plugins.legend;
+    if(lg){_lg={display:lg.display,position:lg.position};if(lg.display===false){lg.display=true;if(!lg.position||lg.position==='top')lg.position='bottom';}}
+    inst.update('none');inst.draw();
+  }catch(e){}}
+  const card=c.closest&&c.closest('.card');
+  const secEl=card&&card.querySelector('.sec');
+  const title=(titleOverride||(secEl?secEl.textContent:name)||name).trim();
+  let subtitle=subtitleOverride||'';
+  const cw=c.width,ch=c.height;
+  const S=Math.max(1,Math.round(cw/((c.clientWidth||cw))))||2; // factor de nitidez (dpr del canvas)
+  const padX=26*S,padTop=18*S,rule=6*S;
+  const titleY=padTop+rule+10*S,kickY=titleY+ (title?26*S:0);
+  const subY=kickY+ (subtitle?0:0);
+  const headH=rule+padTop+ (title?26*S:0) + 20*S + (subtitle?18*S:0);
+  const footH=50*S;
+  const W=cw+padX*2, H=headH+ch+footH;
+  const out=document.createElement('canvas');out.width=W;out.height=H;
+  const g=out.getContext('2d');
+  g.fillStyle='#ffffff';g.fillRect(0,0,W,H);
+  // franja de marca (navy -> azul -> naranja -> amarillo)
+  const grd=g.createLinearGradient(0,0,W,0);
+  grd.addColorStop(0,'#02285e');grd.addColorStop(.4,'#0046b1');grd.addColorStop(.72,'#ff4101');grd.addColorStop(1,'#fddd00');
+  g.fillStyle=grd;g.fillRect(0,0,W,rule);
+  g.textBaseline='top';
+  const usableW=W-padX*2;
+  const fitFont=(txt,base,prefix,fam)=>{let fs=base;const set=s=>g.font=`${prefix}${s}px ${fam}`;set(fs);while(g.measureText(txt).width>usableW&&fs>8*S){fs-=S;set(fs);}return fs;};
+  // kicker
+  g.fillStyle='#0046b1';fitFont('ÍNDICE DEPARTAMENTAL DE COMPETITIVIDAD · IDC 2026',11*S,'600 ','Barlow, system-ui, sans-serif');
+  g.fillText('ÍNDICE DEPARTAMENTAL DE COMPETITIVIDAD · IDC 2026',padX,padTop+rule);
+  // título
+  g.fillStyle='#02285e';fitFont(title,22*S,'800 ','"Barlow Semi Condensed", Barlow, sans-serif');
+  g.fillText(title,padX,padTop+rule+16*S);
+  // subtítulo (contexto)
+  if(subtitle){g.fillStyle='#5C6A82';fitFont(subtitle,12.5*S,'','Barlow, sans-serif');g.fillText(subtitle,padX,padTop+rule+16*S+26*S);}
+  // gráfico (con su leyenda)
+  g.drawImage(c,padX,headH,cw,ch);
+  // restaurar el gráfico en pantalla (leyenda/animación originales)
+  if(inst){try{if(_lg&&inst.options.plugins&&inst.options.plugins.legend){inst.options.plugins.legend.display=_lg.display;inst.options.plugins.legend.position=_lg.position;}if(_anim!==null)inst.options.animation=_anim;inst.update('none');}catch(e){}}
+  // pie
+  let fecha;try{fecha=new Date().toLocaleDateString('es-CO',{year:'numeric',month:'long',day:'numeric'});}catch(e){fecha=new Date().toLocaleDateString();}
+  g.fillStyle='#e2eaf4';g.fillRect(padX,headH+ch+10*S,W-padX*2,Math.max(1,S));
+  const copy='© 2026 Consejo Privado de Competitividad y Universidad del Rosario · Todos los derechos reservados';
+  g.fillStyle='#5C6A82';fitFont(copy,11*S,'','Barlow, sans-serif');
+  g.fillText(copy,padX,headH+ch+18*S);
+  g.fillStyle='#8895ae';g.font=`${10.5*S}px Barlow, sans-serif`;
+  g.fillText('Fuente: compite.com.co · Exportado el '+fecha,padX,headH+ch+34*S);
+  const a=document.createElement('a');a.href=out.toDataURL('image/png');a.download=name+'.png';a.click();
+}
+document.getElementById('btnCmpBarPng').onclick=()=>exportCanvas('cmpBar','comparacion',null,picked.join(' · '));
+document.getElementById('btnScPng').onclick=()=>exportCanvas('scatter','dispersion',null,metricLabel(document.getElementById('scX').value||PILLARS[0].key)+' vs '+metricLabel(document.getElementById('scY').value||PILLARS[1].key));
 document.getElementById('btnGbPng').onclick=()=>exportCanvas('gbCanvas','grafica');
 document.getElementById('btnPrPng').onclick=()=>exportCanvas('prCanvas','preset');
 document.getElementById('btnHiPng').onclick=()=>exportCanvas('hiCanvas','histograma');
@@ -632,7 +805,7 @@ const _down=[...DEPTS].sort((a,b)=>a.cambio_pos-b.cambio_pos)[0];
 function setTab(name){curTab=name;
   document.querySelectorAll('.tab').forEach(x=>{const on=x.dataset.tab===name;x.classList.toggle('active',on);x.setAttribute('aria-selected',on?'true':'false');});
   document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.dataset.panel===name));
-  if(name==='resumen')buildResumen();
+  if(name==='resumen'){buildResumen();renderZBlock();}
   if(name==='mapa')drawMap();
   if(name==='comparar'){buildCmpPick();drawCmpBar();drawCmpRadar();buildCmpTable();}
   if(name==='dispersion')drawScatter();
@@ -766,6 +939,66 @@ function drawTileMap(){const cont=document.getElementById('map');const rows=[...
   cont.innerHTML='<div class="tilemap">'+rows.map(d=>{const v=score(d,mapMetric,2026);return `<div class="tile" data-d="${d.departamento}" style="background:${color(v)}99;color:${inkOn(color(v))};outline:${d.departamento===SELECTED?'2px solid var(--sel)':'none'}"><b>${d.departamento}</b><span class="ts">${fmt(v)}</span> <span style="font-size:11px">· ${rank(d,mapMetric,2026)}°</span></div>`;}).join('')+'</div>';
   cont.querySelectorAll('.tile').forEach(t=>t.onclick=()=>selectDept(t.dataset.d));}
 document.getElementById('mapmetric').onchange=e=>{mapMetric=e.target.value||'idc';buildSideRank();if(mapFailed)drawTileMap();else recolorMap();legendGradient();};
+
+/* ================= CLUSTERS (k-means sobre los 13 pilares) ================= */
+const CLU_COLORS=['#0046b1','#2476c5','#fa7303','#b10b4f'];
+const CLU_NAMES=['Alta competitividad','Competitividad media-alta','Competitividad media-baja','Competitividad en desarrollo'];
+let CLUSTERS=null,cluActive=-1;
+function _seed(s){return function(){s=(s*9301+49297)%233280;return s/233280;};}
+function _d2(a,b){let s=0;for(let i=0;i<a.length;i++){const d=a[i]-b[i];s+=d*d;}return s;}
+function _kmeansOnce(data,K,iters,seed){const n=data.length,dim=data[0].length,rnd=_seed(seed);
+  let cent=[data[Math.floor(rnd()*n)].slice()];
+  while(cent.length<K){const d2=data.map(p=>Math.min(...cent.map(c=>_d2(p,c))));const sum=d2.reduce((a,b)=>a+b,0);let r=rnd()*sum,i=0;while(r>0&&i<n-1){r-=d2[i];i++;}cent.push(data[i].slice());}
+  let asg=new Array(n).fill(0);
+  for(let it=0;it<iters;it++){for(let i=0;i<n;i++){let bd=Infinity,bj=0;for(let j=0;j<K;j++){const d=_d2(data[i],cent[j]);if(d<bd){bd=d;bj=j;}}asg[i]=bj;}
+    const sums=Array.from({length:K},()=>new Array(dim).fill(0)),cnt=new Array(K).fill(0);
+    for(let i=0;i<n;i++){cnt[asg[i]]++;for(let d=0;d<dim;d++)sums[asg[i]][d]+=data[i][d];}
+    for(let j=0;j<K;j++)if(cnt[j])for(let d=0;d<dim;d++)cent[j][d]=sums[j][d]/cnt[j];}
+  let inertia=0;for(let i=0;i<n;i++)inertia+=_d2(data[i],cent[asg[i]]);
+  const used=new Set(asg).size,minSize=Math.min(...Array.from({length:K},(_,j)=>asg.filter(a=>a===j).length));
+  return {asg,inertia,used,minSize};}
+function kmeans(data,K,iters){let best=null;
+  for(let s=1;s<=40;s++){const r=_kmeansOnce(data,K,iters,s*97+13);
+    if(r.used<K)continue;
+    const score=r.inertia+(r.minSize<=1?1e6:r.minSize===2?300:0);
+    if(!best||score<best.score)best={asg:r.asg,score};}
+  return (best||_kmeansOnce(data,K,iters,110)).asg;}
+function computeClusters(){if(CLUSTERS)return CLUSTERS;
+  const feats=DEPTS.map(d=>PILLARS.map(p=>d.pilares[p.key].p2026)),n=feats.length,dim=PILLARS.length;
+  const mean=[],sd=[];for(let d=0;d<dim;d++){const col=feats.map(f=>f[d]);const m=col.reduce((a,b)=>a+b,0)/n;mean[d]=m;sd[d]=Math.sqrt(col.reduce((a,b)=>a+(b-m)**2,0)/n)||1;}
+  const z=feats.map(f=>f.map((x,d)=>(x-mean[d])/sd[d]));
+  const asg=kmeans(z,4,80);
+  const raw=[0,1,2,3].map(k=>{const idx=DEPTS.map((_,i)=>i).filter(i=>asg[i]===k);return {idx,mIdc:idx.reduce((a,i)=>a+DEPTS[i].idc_2026,0)/(idx.length||1)};}).filter(g=>g.idx.length);
+  raw.sort((a,b)=>b.mIdc-a.mIdc);
+  const clusterOf={},groups=raw.map((g,ci)=>{
+    g.idx.forEach(i=>clusterOf[DEPTS[i].departamento]=ci);
+    // pilar más distintivo (mayor promedio del grupo vs nacional)
+    let bestP=null,bd=-1e9;PILLARS.forEach(p=>{const gm=g.idx.reduce((a,i)=>a+DEPTS[i].pilares[p.key].p2026,0)/g.idx.length;const diff=gm-NATAVG[p.key];if(diff>bd){bd=diff;bestP=p.nombre;}});
+    return {ci,depts:g.idx.map(i=>DEPTS[i].departamento).sort((a,b)=>byName[a].rank_2026-byName[b].rank_2026),meanIdc:g.mIdc,strength:bestP};
+  });
+  CLUSTERS={clusterOf,groups};return CLUSTERS;}
+function cluColor(dn){const c=computeClusters();const ci=c.clusterOf[dn];return ci==null?'#c9d5e6':CLU_COLORS[ci];}
+async function renderClusterMap(){const cont=document.getElementById('zMap');if(!cont)return;
+  computeClusters();
+  if(!geo&&!mapFailed){geo=await loadGeo();if(!geo)mapFailed=true;}
+  if(mapFailed||!geo){ // fallback mosaicos
+    cont.innerHTML='<div class="tilemap">'+[...DEPTS].sort((a,b)=>a.rank_2026-b.rank_2026).map(d=>{const col=cluColor(d.departamento);return `<div class="tile" data-d="${d.departamento}" style="background:${col}cc;color:#fff">${d.departamento}</div>`;}).join('')+'</div>';
+    cont.querySelectorAll('.tile').forEach(t=>t.onclick=()=>selectDept(t.dataset.d));return;}
+  const w=560,h=600,proj=d3.geoMercator().fitSize([w,h],geo),path=d3.geoPath(proj);
+  const svg=d3.select(cont).html('').append('svg').attr('viewBox',`0 0 ${w} ${h}`).attr('preserveAspectRatio','xMidYMid meet');
+  svg.selectAll('path').data(geo.features).join('path').attr('d',path).attr('class','geopath').attr('data-dept',f=>matchDept(f.properties)||'')
+    .attr('fill',f=>{const dn=matchDept(f.properties);return dn?cluColor(dn):'#c9d5e6';})
+    .on('mousemove',(e,f)=>{const dn=matchDept(f.properties),ci=dn?computeClusters().clusterOf[dn]:null;tip.style.opacity=1;tip.style.left=(e.clientX+14)+'px';tip.style.top=(e.clientY+14)+'px';tip.innerHTML=dn?`<b>${dn}</b><br>${ci!=null?CLU_NAMES[ci]:'—'}<br>IDC ${fmt(byName[dn].idc_2026)} · ${byName[dn].rank_2026}°`:'—';})
+    .on('mouseout',()=>tip.style.opacity=0).on('click',(e,f)=>{const dn=matchDept(f.properties);if(dn)selectDept(dn);});
+  applyCluFilter();}
+function applyCluFilter(){d3.selectAll('#zMap path.geopath').style('opacity',function(){if(cluActive<0)return 1;const dn=this.getAttribute('data-dept');return computeClusters().clusterOf[dn]===cluActive?1:.18;}).classed('cluhi',function(){return this.getAttribute('data-dept')===SELECTED;});}
+function buildClusterLegend(){const host=document.getElementById('zLegend');if(!host)return;const c=computeClusters();
+  host.innerHTML=c.groups.map(g=>`<div class="clu-item${cluActive>=0&&cluActive!==g.ci?' mut':''}" data-ci="${g.ci}">
+    <span class="clu-sw" style="background:${CLU_COLORS[g.ci]}"></span>
+    <div><div class="nm">${CLU_NAMES[g.ci]}</div><div class="ds">IDC medio ${fmt(g.meanIdc)} · destaca en ${g.strength}. ${g.depts.slice(0,4).join(', ')}${g.depts.length>4?' y '+(g.depts.length-4)+' más':''}.</div></div>
+    <span class="cnt">${g.depts.length}</span></div>`).join('');
+  host.querySelectorAll('.clu-item').forEach(el=>el.onclick=()=>{const ci=+el.dataset.ci;cluActive=cluActive===ci?-1:ci;buildClusterLegend();applyCluFilter();});}
+function renderZBlock(){buildClusterLegend();renderClusterMap();}
 function buildSideRank(){document.getElementById('ranktitle').textContent='Ranking · '+metricLabel(mapMetric);
   const rows=[...DEPTS].sort((a,b)=>rank(a,mapMetric,2026)-rank(b,mapMetric,2026));
   document.getElementById('siderank').innerHTML=rows.map(d=>{const v=score(d,mapMetric,2026);return `<div class="rrow ${d.departamento===SELECTED?'sel':''}" data-d="${d.departamento}"><span class="pos">${rank(d,mapMetric,2026)}</span><span class="nm">${d.departamento}<div class="rbar" style="width:${v/sMax*100}%;background:${color(v)}"></div></span><span class="sc">${fmt(v)}</span></div>`;}).join('');
@@ -891,7 +1124,7 @@ document.getElementById('evMetric').onchange=evRender;document.getElementById('e
 function buildTrPick(){document.getElementById('trPick').innerHTML=DEPTS.map(d=>`<label class="${trPicked.includes(d.departamento)?'on':''}"><input type="checkbox" value="${d.departamento}" ${trPicked.includes(d.departamento)?'checked':''}>${d.departamento}</label>`).join('');
   document.querySelectorAll('#trPick input').forEach(c=>c.onchange=()=>{if(c.checked)trPicked.push(c.value);else trPicked=trPicked.filter(x=>x!==c.value);buildTrPick();trRender();});}
 function trRender(){const k=document.getElementById('trMetric').value||'idc';const many=trPicked.length>12;
-  const ds=trPicked.map(dn=>{const h=EX.historico.data[dn]&&EX.historico.data[dn][k]||{};return {label:dn,data:HYEARS.map(y=>h[y]==null?null:h[y]),borderColor:regColor(byName[dn].region),backgroundColor:regColor(byName[dn].region),borderWidth:many?1.4:2.4,pointRadius:many?0:3,spanGaps:true,tension:.2};});
+  const ds=trPicked.map(dn=>{const h=EX.historico.data[dn]&&EX.historico.data[dn][k]||{};return {label:dn,data:HYEARS.map(y=>h[y]==null?null:h[y]),borderColor:regColor(byName[dn].region),backgroundColor:regColor(byName[dn].region),borderWidth:many?1.4:2.4,pointRadius:many?0:3,spanGaps:true,tension:.2,clip:false};});
   const vals=[];ds.forEach(d=>d.data.forEach(v=>{if(v!=null)vals.push(v);}));
   let ymin=1,ymax=33;
   if(vals.length){ymin=Math.max(1,Math.min(...vals)-1);ymax=Math.min(33,Math.max(...vals)+1);if(ymax-ymin<3)ymax=Math.min(33,ymin+3);}
@@ -912,32 +1145,68 @@ document.getElementById('bpq').oninput=buildBP;document.getElementById('bpPilar'
 /* ---- FICHA ---- */
 document.getElementById('fichaSel').onchange=e=>{selectDept(e.target.value);};
 function indsForPillar(dn,pkey){return EX.indicadores.dic.filter(d=>d.pilar===pkey).map(d=>({nombre:d.nombre,code:d.code,v:(EX.indicadores.matrix[dn]||{})[d.code]})).filter(x=>typeof x.v==='number');}
+let fichaTrajChart;
+let NAT_PIB=0;
+function natPib(){if(!NAT_PIB){NAT_PIB=Object.values(EX.context||{}).reduce((s,c)=>s+(c.pib_miles_mill||0),0);}return NAT_PIB;}
+function bestOfPillar(pkey){const b=DEPTS.find(x=>x.pilares[pkey]&&x.pilares[pkey].r2026===1);return b?b.departamento:'—';}
+function drawFichaTraj(dn){const cv=document.getElementById('fichaTraj');if(!cv||!window.Chart)return;
+  const h=(EX.historico.data[dn]&&EX.historico.data[dn]['idc'])||{};
+  const data=HYEARS.map(y=>h[y]==null?null:h[y]);
+  const cfg={type:'line',data:{labels:HYEARS,datasets:[{label:'Posición IDC',data,borderColor:'#0046b1',backgroundColor:'rgba(0,70,177,.12)',borderWidth:2.6,pointRadius:4,pointHoverRadius:6,pointBackgroundColor:'#0046b1',pointBorderColor:'#fff',pointBorderWidth:1.5,tension:.25,fill:true,spanGaps:true,clip:false}]},
+    options:{responsive:true,maintainAspectRatio:false,scales:{y:{reverse:true,min:1,suggestedMax:33,title:{display:true,text:'Posición (1 = mejor)',font:{size:10}},ticks:{precision:0,font:{size:10}}},x:{ticks:{font:{size:11}}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:it=>it.raw==null?'sin dato':('Puesto '+it.raw+'° en '+it.label)}}}}};
+  if(fichaTrajChart)fichaTrajChart.destroy();fichaTrajChart=new Chart(cv,cfg);}
 function buildFicha(){const d=byName[SELECTED];document.getElementById('fichaSel').value=SELECTED;const c=EX.context[SELECTED]||{};
-  const dlt=d.cambio_pos>0?`<span class="delta up">▲ subió ${d.cambio_pos}</span>`:d.cambio_pos<0?`<span class="delta down">▼ bajó ${Math.abs(d.cambio_pos)}</span>`:'<span class="delta eq">sin cambio</span>';
+  const dcls=d.cambio_pos>0?'up':d.cambio_pos<0?'down':'eq';
+  const dtxt=d.cambio_pos>0?`▲ subió ${d.cambio_pos}`:d.cambio_pos<0?`▼ bajó ${Math.abs(d.cambio_pos)}`:'sin cambio';
   const ranked=[...PILLARS].map(p=>({p,v:d.pilares[p.key].p2026,diff:d.pilares[p.key].p2026-NATAVG[p.key]}));
   const best=[...ranked].sort((a,b)=>b.diff-a.diff)[0],worst=[...ranked].sort((a,b)=>a.diff-b.diff)[0];
-  const insight=`<b>Lectura rápida:</b> ${SELECTED} ocupa la posición <b>${d.rank_2026}</b> de 33 en el IDC 2026 (${fmt(d.idc_2026)}/10) y ${d.cambio_pos>0?'subió '+d.cambio_pos+' posiciones':d.cambio_pos<0?'bajó '+Math.abs(d.cambio_pos)+' posiciones':'se mantuvo'} frente a 2025. Su mayor fortaleza relativa es <b>${best.p.nombre}</b> (${fmt(best.v)}, ${best.diff>=0?'+':''}${fmt(best.diff)} vs nacional) y su mayor rezago, <b>${worst.p.nombre}</b> (${fmt(worst.v)}, ${fmt(worst.diff)} vs nacional).`;
-  const pil=PILLARS.map((p,i)=>{const v=d.pilares[p.key].p2026,r=d.pilares[p.key].r2026,diff=v-NATAVG[p.key];
-    const tag=diff>=0.5?'<span class="tag-str">▲ fortaleza</span>':diff<=-0.5?'<span class="tag-weak">▼ rezago</span>':'<span class="note">≈ promedio</span>';
+  const posHist=(EX.historico.data[SELECTED]&&EX.historico.data[SELECTED]['idc'])||{};
+  const pos22=posHist['2022'],pos26=posHist['2026'];
+  const trajTxt=(pos22!=null&&pos26!=null)?(pos26<pos22?`ganó <b>${pos22-pos26}</b> puestos desde 2022`:pos26>pos22?`cedió <b>${pos26-pos22}</b> puestos desde 2022`:'mantiene su puesto desde 2022'):'';
+  const insight=`<b>Lectura rápida.</b> ${SELECTED} ocupa el puesto <b>${d.rank_2026}</b> de 33 en el IDC 2026 (${fmt(d.idc_2026)}/10) y ${d.cambio_pos>0?'subió '+d.cambio_pos+' posiciones':d.cambio_pos<0?'bajó '+Math.abs(d.cambio_pos)+' posiciones':'se mantuvo'} frente a 2025${trajTxt?'; '+trajTxt:''}. Su mayor fortaleza relativa es <b>${best.p.nombre}</b> (${fmt(best.v)}, ${best.diff>=0?'+':''}${fmt(best.diff)} vs. promedio nacional) y su mayor rezago, <b>${worst.p.nombre}</b> (${fmt(worst.v)}, ${fmt(worst.diff)}).`;
+  // ---- datos destacados (como el PDF) ----
+  const part=c.pib_miles_mill?(c.pib_miles_mill/natPib()*100):null;
+  const stat=(k,val,u)=>`<div class="fx-stat fx-reveal"><div class="in"><div class="k">${k}</div><div class="val">${val}</div>${u?`<div class="u">${u}</div>`:''}</div></div>`;
+  const stats=`<div class="fx-stats">
+    ${stat('PIB por trabajador','$'+(c.pib_por_trabajador?(c.pib_por_trabajador/1e6).toLocaleString('es-CO',{maximumFractionDigits:1}):'–')+' M','COP · 2024')}
+    ${stat('PIB departamental','$'+(c.pib_miles_mill?(c.pib_miles_mill/1000).toLocaleString('es-CO',{maximumFractionDigits:2}):'–'),'billones COP · 2024')}
+    ${stat('Participación nacional',part!=null?part.toLocaleString('es-CO',{maximumFractionDigits:part<1?2:1})+'%':'–','del PIB · 2024')}
+    ${stat('PIB per cápita','$'+(c.pib_per_capita?(c.pib_per_capita/1e6).toLocaleString('es-CO',{maximumFractionDigits:1}):'–')+' M','COP · 2024')}
+    ${stat('Población',intf(c.poblacion),'habitantes · 2026')}
+    ${stat('Ocupados',intf(c.ocupados),'personas · 2024')}</div>`;
+  // ---- pilares premium con mejor de la clasificación ----
+  const pil=PILLARS.map((p,i)=>{const pv=d.pilares[p.key];const v=pv.p2026,r=pv.r2026,ch=v-(pv.p2025||v),diff=v-NATAVG[p.key];
+    const tag=diff>=0.5?'<span class="fx-tagS">▲ fortaleza</span>':diff<=-0.5?'<span class="fx-tagW">▼ rezago</span>':'<span class="note">≈ promedio</span>';
+    const chtxt=Math.abs(ch)<0.005?'':` <span style="color:${ch>0?'var(--up)':'var(--down)'};font-size:11px">(${ch>0?'+':''}${fmt(ch)})</span>`;
+    const bestD=bestOfPillar(p.key);
     const inds=indsForPillar(SELECTED,p.key);
-    const indhtml=inds.length?inds.map(x=>`<div class="indrow"><span>${x.nombre}</span><span style="font-weight:600;color:var(--ink)">${fmt(x.v)}</span></div>`).join(''):'<div class="indrow"><span class="note">Sin indicadores disponibles</span><span></span></div>';
-    return `<div class="pilrow"><div class="top" data-pi="${i}"><div><span class="caret">▸</span> ${p.nombre}</div><div class="track"><div class="fill" style="width:${v/10*100}%;background:${color(v)}"></div></div><div class="vs" style="font-size:12px">${fmt(v)} · ${r}° ${tag}</div></div><div class="inds" id="inds${i}">${indhtml}</div></div>`;}).join('');
+    const indhtml=inds.length?inds.map(x=>`<div class="fx-ind"><span>${x.nombre}</span><span class="iv">${fmt(x.v)}</span></div>`).join(''):'<div class="fx-ind"><span class="note">Sin indicadores disponibles</span><span></span></div>';
+    return `<div class="fx-pil" data-pi="${i}"><div class="hd"><div class="pn"><span class="caret">▸</span>${p.nombre}</div>
+      <div class="track"><div class="fill" style="width:${Math.max(2,v/10*100)}%;background:${color(v)}"></div></div>
+      <div class="rt"><div><span class="sc">${fmt(v)}</span> · ${r}° ${tag}${chtxt}</div><div class="best">Mejor: ${bestD}</div></div></div>
+      <div class="body"><div class="in">${indhtml}</div></div></div>`;}).join('');
   const bps=BP.filter(b=>b.departamento===SELECTED);
   const bphtml=bps.length?bps.map(b=>`<li><b>${b.titulo}</b> — ${b.pilares.map(p=>p.nombre).join(', ')} ${b.youtube?`· <a href="${b.youtube}" target="_blank" rel="noopener">video</a>`:''}</li>`).join(''):'<li class="note">Sin buenas prácticas registradas.</li>';
-  const ctx=`<div class="ctxgrid">
-    <div class="ctxc"><div class="l">PIB departamental (2024)</div><div class="v">$${c.pib_miles_mill?(c.pib_miles_mill/1000).toLocaleString('es-CO',{maximumFractionDigits:1}):'–'} billones</div></div>
-    <div class="ctxc"><div class="l">Población (2026)</div><div class="v">${intf(c.poblacion)}</div></div>
-    <div class="ctxc"><div class="l">PIB per cápita (2024)</div><div class="v">$${c.pib_per_capita?(c.pib_per_capita/1e6).toLocaleString('es-CO',{maximumFractionDigits:1}):'–'} M</div></div>
-    <div class="ctxc"><div class="l">Ocupados (2024)</div><div class="v">${intf(c.ocupados)}</div></div></div>`;
-  document.getElementById('fichaBody').innerHTML=`
-    <div class="fichahead"><div><div class="note">${d.region} · Posición ${d.rank_2026}° de 33</div><div class="big">${SELECTED}</div>
-      <div>IDC 2026: <b>${fmt(d.idc_2026)}</b> · 2025: ${fmt(d.idc_2025)} ${dlt}</div></div>
-      <div><span class="chip" style="background:${color(d.idc_2026)};color:${inkOn(color(d.idc_2026))};font-size:20px;padding:8px 16px">${fmt(d.idc_2026)}</span></div></div>
-    ${ctx}
-    <div class="insight">${insight}</div>
-    <h3 class="sec" style="margin-top:18px">Pilares (2026 · clic para ver indicadores)</h3>${pil}
-    <h3 class="sec" style="margin-top:18px">Buenas prácticas del departamento (${bps.length})</h3><ul>${bphtml}</ul>`;
-  document.querySelectorAll('#fichaBody .pilrow .top').forEach(t=>t.onclick=()=>{const el=document.getElementById('inds'+t.dataset.pi);el.classList.toggle('open');t.querySelector('.caret').textContent=el.classList.contains('open')?'▾':'▸';});}
+  const sc=color(d.idc_2026);
+  document.getElementById('fichaBody').innerHTML=`<div class="fx">
+    <div class="fx-hero fx-reveal">
+      <div><span class="fx-eyebrow">${d.region} · Perfil departamental</span>
+        <div class="name">${SELECTED}</div>
+        <div class="sub"><span class="cap">Puesto ${d.rank_2026}° de 33</span><span>·</span><span>IDC 2025: ${fmt(d.idc_2025)}</span><span class="fx-delta ${dcls}">${dtxt}</span></div></div>
+      <div class="fx-score"><div class="core" style="background:${sc};color:${inkOn(sc)}"><div class="num">${fmt(d.idc_2026)}</div><div class="rk">IDC 2026 · /10</div></div></div>
+    </div>
+    ${stats}
+    <div class="fx-2col">
+      <div class="fx-card fx-reveal"><h4>Evolución del ranking 2022 → 2026</h4><div class="cap">Posición entre los 33 territorios · 1 = mejor</div><div class="fx-trajbox"><canvas id="fichaTraj"></canvas></div></div>
+      <div class="fx-card fx-reveal"><h4>Lectura del perfil</h4><div class="fx-read">${insight}</div></div>
+    </div>
+    <span class="fx-eyebrow">Los 13 pilares · 2026</span>
+    <div style="margin:10px 0 4px">${pil}</div>
+    <span class="fx-eyebrow" style="margin-top:6px">Buenas prácticas (${bps.length})</span>
+    <ul style="margin-top:10px">${bphtml}</ul>
+  </div>`;
+  document.querySelectorAll('#fichaBody .fx-pil .hd').forEach(t=>t.onclick=()=>t.parentElement.classList.toggle('open'));
+  drawFichaTraj(SELECTED);}
 
 /* ---- FICHA: selección múltiple + reporte PDF ---- */
 let fichaReportSet=[];
@@ -1083,8 +1352,17 @@ function syncSel(){document.querySelectorAll('#tbl tbody tr').forEach(tr=>tr.cla
   document.querySelectorAll('#siderank .rrow').forEach(r=>r.classList.toggle('sel',r.dataset.d===SELECTED));
   document.querySelectorAll('#hmTbl tbody tr').forEach(tr=>tr.classList.toggle('sel',tr.dataset.d===SELECTED));
   if(mapDrawn&&!mapFailed)recolorMap();if(mapFailed&&document.querySelector('#map .tilemap'))drawTileMap();
+  if(document.querySelector('#zMap path'))applyCluFilter();
   if(curTab==='comparar')buildCmpPick();if(curTab==='dispersion')drawScatter();}
 
+function buildIntro(){const host=document.getElementById('introStruct');if(!host)return;
+  const FACTORS=[
+    {t:'Condiciones habilitantes',c:'#02285e',p:['Instituciones','Infraestructura','Adopción TIC','Sostenibilidad ambiental']},
+    {t:'Capital humano',c:'#0046b1',p:['Salud','Educación básica y media','Educación superior y formación para el trabajo']},
+    {t:'Eficiencia de los mercados',c:'#fa7303',p:['Entorno para los negocios','Mercado laboral','Sistema financiero','Tamaño del mercado']},
+    {t:'Ecosistema innovador',c:'#b10b4f',p:['Sofisticación y diversificación','Innovación']}
+  ];
+  host.innerHTML=FACTORS.map(f=>`<div class="fac fx-reveal"><div class="in"><div class="fh"><span class="dot" style="background:${f.c}"></span><span class="ft">${f.t}</span></div><ul>${f.p.map(x=>`<li>${x}</li>`).join('')}</ul></div></div>`).join('');}
 function buildCordillera(){
   const host=document.getElementById('cordillera');if(!host)return;
   const vmax=d3.max(DEPTS,d=>d.idc_2026),vmin=d3.min(DEPTS,d=>d.idc_2026);
@@ -1113,6 +1391,8 @@ function initFromHash(){const p=new URLSearchParams(location.hash.replace('#',''
   return (saved&&document.querySelector(`.tab[data-tab="${saved}"]`))?saved:'resumen';}
 let savedTheme='light';try{savedTheme=localStorage.getItem('idc_theme')||'light';}catch(e){}
 Chart.defaults.color=savedTheme==='dark'?'#93A6C4':'#5C6A82';Chart.defaults.borderColor=savedTheme==='dark'?'#1C3760':'#D4DCE8';Chart.defaults.font.family="'Barlow',system-ui,sans-serif";
+/* aire alrededor del área de trazado para que puntos/líneas en los bordes no se recorten */
+Chart.defaults.layout={padding:{top:12,right:14,bottom:6,left:6}};
 /* ---- animación de entrada de gráficos (respeta prefers-reduced-motion) ---- */
 (function(){const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
   if(reduce){Chart.defaults.animation=false;return;}
@@ -1126,7 +1406,7 @@ Chart.defaults.color=savedTheme==='dark'?'#93A6C4':'#5C6A82';Chart.defaults.bord
   Chart.defaults.animation.delay=(ctx)=>(ctx.type==='data'&&ctx.mode==='default')?ctx.dataIndex*40:0;
 })();
 document.documentElement.dataset.theme=savedTheme;document.getElementById('btnTheme').textContent=savedTheme==='dark'?'Modo claro':'Modo oscuro';
-buildTable();buildCmpPick();gbSync();buildCordillera();buildFichaPick();
+buildTable();buildCmpPick();gbSync();buildIntro();buildFichaPick();
 setTab(initFromHash());
 setTimeout(()=>{appReady=true;},0);
 /* sombra del tab bar, botón "volver arriba" y barra de progreso */
